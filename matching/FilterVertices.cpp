@@ -18,16 +18,48 @@
 using namespace Eigen;
 
 bool
+FilterVertices::EFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count){
+    allocateBuffer(data_graph, query_graph, candidates, candidates_count);
+    int top_s = 5;
+    MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
+    MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
+
+    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
+//    MTcalc12(data_graph,data_graph->getGraphMaxDegree(),datagraph_eigenvalue,true,top_s);
+//    saveData("yeast.csv", datagraph_eigenvalue);
+    datagraph_eigenvalue = openData("yeast.csv");
+
+    for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
+        for (ui j = 0; j < data_graph->getVerticesCount(); ++j) {
+                // Top Eigenvalue check
+            bool top_s_check = true;
+            for (ui e=0; e<5; e++){
+                if (datagraph_eigenvalue.row(j)[e] < querygraph_eigenvalue.row(i)[e]){
+                    top_s_check = false;
+                }
+            }
+            //TODO something wrong here
+            if(top_s_check){
+                candidates[i][candidates_count[i]++] = j;
+            }
+        }
+        if (candidates_count[i] == 0) {
+            return false;
+        }
+        return true;
+}}
+
+bool
 FilterVertices::LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, bool isEigenCheck) {
     if (isEigenCheck){
         allocateBuffer(data_graph, query_graph, candidates, candidates_count);
-        int top_s = 5;
+        int top_s = 30;
         MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
         MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
 
         MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
 //        MTcalc12(data_graph,data_graph->getGraphMaxDegree(),datagraph_eigenvalue,true,top_s);
-//        saveData("youtube.csv", datagraph_eigenvalue);
+//        saveData("yeast.csv", datagraph_eigenvalue);
         datagraph_eigenvalue = openData("youtube.csv");
 
         for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
@@ -46,7 +78,7 @@ FilterVertices::LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
                         if (datagraph_eigenvalue.row(data_vertex)[e] < querygraph_eigenvalue.row(i)[e]){
                             top_s_check = false;
                         }
-                    };
+                    }
                     if(top_s_check){
                         candidates[i][candidates_count[i]++] = data_vertex;
                     }
@@ -86,7 +118,7 @@ bool
 FilterVertices::NLFFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, bool isEigenCheck) {
     allocateBuffer(data_graph, query_graph, candidates, candidates_count);
 
-    int top_s = 5;
+    int top_s = 30;
     MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
     MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
     MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
@@ -105,82 +137,81 @@ FilterVertices::NLFFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
     return true;
 }
 
+bool
+FilterVertices::GQLFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, bool isEigenCheck) {
+    // Local refinement.
+    if (!NLFFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck))
+        return false;
 
 
-//bool
-//FilterVertices::GQLFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count) {
-//    // Local refinement.
-//    if (!NLFFilter(data_graph, query_graph, candidates, candidates_count))
-//        return false;
-//
-//    // Allocate buffer.
-//    ui query_vertex_num = query_graph->getVerticesCount();
-//    ui data_vertex_num = data_graph->getVerticesCount();
-//
-//    bool** valid_candidates = new bool*[query_vertex_num];
-//    for (ui i = 0; i < query_vertex_num; ++i) {
-//        valid_candidates[i] = new bool[data_vertex_num];
-//        memset(valid_candidates[i], 0, sizeof(bool) * data_vertex_num);
-//    }
-//
-//    ui query_graph_max_degree = query_graph->getGraphMaxDegree();
-//    ui data_graph_max_degree = data_graph->getGraphMaxDegree();
-//
-//    int* left_to_right_offset = new int[query_graph_max_degree + 1];
-//    int* left_to_right_edges = new int[query_graph_max_degree * data_graph_max_degree];
-//    int* left_to_right_match = new int[query_graph_max_degree];
-//    int* right_to_left_match = new int[data_graph_max_degree];
-//    int* match_visited = new int[data_graph_max_degree + 1];
-//    int* match_queue = new int[query_vertex_num];
-//    int* match_previous = new int[data_graph_max_degree + 1];
-//
-//    // Record valid candidate vertices for each query vertex.
-//    for (ui i = 0; i < query_vertex_num; ++i) {
-//        VertexID query_vertex = i;
-//        for (ui j = 0; j < candidates_count[query_vertex]; ++j) {
-//            VertexID data_vertex = candidates[query_vertex][j];
-//            valid_candidates[query_vertex][data_vertex] = true;
-//        }
-//    }
-//
-//    // Global refinement.
-//    for (ui l = 0; l < 2; ++l) {
-//        for (ui i = 0; i < query_vertex_num; ++i) {
-//            VertexID query_vertex = i;
-//            for (ui j = 0; j < candidates_count[query_vertex]; ++j) {
-//                VertexID data_vertex = candidates[query_vertex][j];
-//
-//                if (data_vertex == INVALID_VERTEX_ID)
-//                    continue;
-//
-//                if (!verifyExactTwigIso(data_graph, query_graph, data_vertex, query_vertex, valid_candidates,
-//                                        left_to_right_offset, left_to_right_edges, left_to_right_match,
-//                                        right_to_left_match, match_visited, match_queue, match_previous)) {
-//                    candidates[query_vertex][j] = INVALID_VERTEX_ID;
-//                    valid_candidates[query_vertex][data_vertex] = false;
-//                }
-//            }
-//        }
-//    }
-//
-//    // Compact candidates.
-//    compactCandidates(candidates, candidates_count, query_vertex_num);
-//
-//    // Release memory.
-//    for (ui i = 0; i < query_vertex_num; ++i) {
-//        delete[] valid_candidates[i];
-//    }
-//    delete[] valid_candidates;
-//    delete[] left_to_right_offset;
-//    delete[] left_to_right_edges;
-//    delete[] left_to_right_match;
-//    delete[] right_to_left_match;
-//    delete[] match_visited;
-//    delete[] match_queue;
-//    delete[] match_previous;
-//
-//    return isCandidateSetValid(candidates, candidates_count, query_vertex_num);
-//}
+    // Allocate buffer.
+    ui query_vertex_num = query_graph->getVerticesCount();
+    ui data_vertex_num = data_graph->getVerticesCount();
+
+    bool** valid_candidates = new bool*[query_vertex_num];
+    for (ui i = 0; i < query_vertex_num; ++i) {
+        valid_candidates[i] = new bool[data_vertex_num];
+        memset(valid_candidates[i], 0, sizeof(bool) * data_vertex_num);
+    }
+
+    ui query_graph_max_degree = query_graph->getGraphMaxDegree();
+    ui data_graph_max_degree = data_graph->getGraphMaxDegree();
+
+    int* left_to_right_offset = new int[query_graph_max_degree + 1];
+    int* left_to_right_edges = new int[query_graph_max_degree * data_graph_max_degree];
+    int* left_to_right_match = new int[query_graph_max_degree];
+    int* right_to_left_match = new int[data_graph_max_degree];
+    int* match_visited = new int[data_graph_max_degree + 1];
+    int* match_queue = new int[query_vertex_num];
+    int* match_previous = new int[data_graph_max_degree + 1];
+
+    // Record valid candidate vertices for each query vertex.
+    for (ui i = 0; i < query_vertex_num; ++i) {
+        VertexID query_vertex = i;
+        for (ui j = 0; j < candidates_count[query_vertex]; ++j) {
+            VertexID data_vertex = candidates[query_vertex][j];
+            valid_candidates[query_vertex][data_vertex] = true;
+        }
+    }
+
+    // Global refinement.
+    for (ui l = 0; l < 2; ++l) {
+        for (ui i = 0; i < query_vertex_num; ++i) {
+            VertexID query_vertex = i;
+            for (ui j = 0; j < candidates_count[query_vertex]; ++j) {
+                VertexID data_vertex = candidates[query_vertex][j];
+
+                if (data_vertex == INVALID_VERTEX_ID)
+                    continue;
+
+                if (!verifyExactTwigIso(data_graph, query_graph, data_vertex, query_vertex, valid_candidates,
+                                        left_to_right_offset, left_to_right_edges, left_to_right_match,
+                                        right_to_left_match, match_visited, match_queue, match_previous)) {
+                    candidates[query_vertex][j] = INVALID_VERTEX_ID;
+                    valid_candidates[query_vertex][data_vertex] = false;
+                }
+            }
+        }
+    }
+
+    // Compact candidates.
+    compactCandidates(candidates, candidates_count, query_vertex_num);
+
+    // Release memory.
+    for (ui i = 0; i < query_vertex_num; ++i) {
+        delete[] valid_candidates[i];
+    }
+    delete[] valid_candidates;
+    delete[] left_to_right_offset;
+    delete[] left_to_right_edges;
+    delete[] left_to_right_match;
+    delete[] right_to_left_match;
+    delete[] match_visited;
+    delete[] match_queue;
+    delete[] match_previous;
+
+    return isCandidateSetValid(candidates, candidates_count, query_vertex_num);
+}
 
 //bool
 //FilterVertices::TSOFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,

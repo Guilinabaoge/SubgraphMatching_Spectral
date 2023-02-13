@@ -136,6 +136,9 @@ int main(int argc, char** argv){
     ui** candidates = NULL;
     ui* candidates_count = NULL;
 
+//    FilterVertices::EFilter(data_graph, query_graph, candidates, candidates_count);
+//    std::cout << "candidates with only eigenFilter: " << *candidates_count << std::endl;
+
     FilterVertices::LDFFilter(data_graph, query_graph, candidates, candidates_count,true);
     std::cout << "LDFFilter candidates with eigenFilter: " << *candidates_count << std::endl;
     FilterVertices::LDFFilter(data_graph, query_graph, candidates, candidates_count,false);
@@ -148,9 +151,10 @@ int main(int argc, char** argv){
     std::cout << "NLFilter candidates without eigenFilter: " << *candidates_count << std::endl;
 
 
-
-//    FilterVertices::GQLFilter(data_graph, query_graph, candidates, candidates_count);
-//    std::cout << "GQLFFilter candidates: " << *candidates_count << std::endl;
+    FilterVertices::GQLFilter(data_graph, query_graph, candidates, candidates_count,true);
+    std::cout << "GQLFFilter candidates with eigenFilter: " << *candidates_count << std::endl;
+    FilterVertices::GQLFilter(data_graph, query_graph, candidates, candidates_count,false);
+    std::cout << "GQLFFilter candidates without eigenFilter: " << *candidates_count << std::endl;
 
 }
 

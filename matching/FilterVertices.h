@@ -13,9 +13,10 @@ using namespace Eigen;
 
 class FilterVertices {
 public:
+    static bool EFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count);
     static bool LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,bool isEigenCheck);
     static bool NLFFilter(Graph* data_graph, Graph* query_graph, ui** &candidates, ui* &candidates_count,bool isEigenCheck);
-    static bool GQLFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count);
+    static bool GQLFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,bool isEigenCheck);
     static bool TSOFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
                           ui *&order,
                           TreeNode *&tree);
@@ -61,6 +62,7 @@ private:
                                    int* match_queue, int* match_previous);
     static void compactCandidates(ui** &candidates, ui* &candidates_count, ui query_vertex_num);
     static bool isCandidateSetValid(ui** &candidates, ui* &candidates_count, ui query_vertex_num);
+
 
 
 };
