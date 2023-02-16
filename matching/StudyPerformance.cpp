@@ -141,6 +141,14 @@ int main(int argc, char** argv){
     ui* candidates_count = NULL;
     ui* tso_order = NULL;
     TreeNode* tso_tree = NULL;
+    ui* cfl_order = NULL;
+    TreeNode* cfl_tree = NULL;
+    ui* dpiso_order = NULL;
+    TreeNode* dpiso_tree = NULL;
+    TreeNode* ceci_tree = NULL;
+    ui* ceci_order = NULL;
+    std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> TE_Candidates;
+    std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> NTE_Candidates;
     int n = 32, sum=0;
     int top_s = 10;
 
@@ -170,6 +178,21 @@ int main(int argc, char** argv){
     std::cout << "TSOFilter candidates with eigenFilter: " << accumulate(candidates_count, candidates_count+n, sum) << std::endl;
     FilterVertices::TSOFilter(data_graph, query_graph, candidates, candidates_count,tso_order,tso_tree,false,top_s);
     std::cout << "TSOFilter candidates without eigenFilter: " << accumulate(candidates_count, candidates_count+n, sum) << std::endl;
+
+    FilterVertices::CFLFilter(data_graph, query_graph, candidates, candidates_count,cfl_order,cfl_tree,true,top_s);
+    std::cout << "CFLFilter candidates with eigenFilter: " << accumulate(candidates_count, candidates_count+n, sum) << std::endl;
+    FilterVertices::CFLFilter(data_graph, query_graph, candidates, candidates_count,cfl_order,cfl_tree,false,top_s);
+    std::cout << "CFLFilter candidates without eigenFilter: " << accumulate(candidates_count, candidates_count+n, sum) << std::endl;
+
+    FilterVertices::DPisoFilter(data_graph, query_graph, candidates, candidates_count,dpiso_order,dpiso_tree,true,top_s);
+    std::cout << "DPisoFilter candidates with eigenFilter: " << accumulate(candidates_count, candidates_count+n, sum) << std::endl;
+    FilterVertices::DPisoFilter(data_graph, query_graph, candidates, candidates_count,dpiso_order,dpiso_tree,false,top_s);
+    std::cout << "DPisoFilter candidates without eigenFilter: " << accumulate(candidates_count, candidates_count+n, sum) << std::endl;
+
+    FilterVertices::CECIFilter(data_graph, query_graph, candidates, candidates_count,ceci_order,ceci_tree,TE_Candidates,NTE_Candidates,true,top_s);
+    std::cout << "CECIFilter candidates with eigenFilter: " << accumulate(candidates_count, candidates_count+n, sum) << std::endl;
+    FilterVertices::CECIFilter(data_graph, query_graph, candidates, candidates_count,ceci_order,ceci_tree,TE_Candidates,NTE_Candidates,false,top_s);
+    std::cout << "CECIFilter candidates without eigenFilter: " << accumulate(candidates_count, candidates_count+n, sum) << std::endl;
 
 }
 
