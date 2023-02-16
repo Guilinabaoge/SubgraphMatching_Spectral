@@ -6,6 +6,7 @@
 #include <future>
 #include <thread>
 #include <fstream>
+#include <numeric>
 
 #include "matchingcommand.h"
 #include "graph/graph.h"
@@ -135,26 +136,34 @@ int main(int argc, char** argv){
 
     ui** candidates = NULL;
     ui* candidates_count = NULL;
+    ui* tso_order = NULL;
+    TreeNode* tso_tree = NULL;
+    int n = 32, sum=0;
 
 //    FilterVertices::EFilter(data_graph, query_graph, candidates, candidates_count);
 //    std::cout << "candidates with only eigenFilter: " << *candidates_count << std::endl;
 
     FilterVertices::LDFFilter(data_graph, query_graph, candidates, candidates_count,true);
-    std::cout << "LDFFilter candidates with eigenFilter: " << *candidates_count << std::endl;
+    std::cout << "LDFFilter candidates with eigenFilter: " << accumulate(candidates_count, candidates_count+n, sum) << std::endl;
     FilterVertices::LDFFilter(data_graph, query_graph, candidates, candidates_count,false);
-    std::cout << "LDFFilter candidates without eigenFilter: " << *candidates_count << std::endl;
+    std::cout << "LDFFilter candidates without eigenFilter: " << accumulate(candidates_count, candidates_count+n, sum) << std::endl;
 
 
     FilterVertices::NLFFilter(data_graph, query_graph, candidates, candidates_count, true);
-    std::cout << "NLFilter candidates with eigenFilter: " << *candidates_count << std::endl;
+    std::cout << "NLFilter candidates with eigenFilter: " << accumulate(candidates_count, candidates_count+n, sum) << std::endl;
     FilterVertices::NLFFilter(data_graph, query_graph, candidates, candidates_count, false);
-    std::cout << "NLFilter candidates without eigenFilter: " << *candidates_count << std::endl;
+    std::cout << "NLFilter candidates without eigenFilter: " << accumulate(candidates_count, candidates_count+n, sum) << std::endl;
 
 
     FilterVertices::GQLFilter(data_graph, query_graph, candidates, candidates_count,true);
-    std::cout << "GQLFFilter candidates with eigenFilter: " << *candidates_count << std::endl;
+    std::cout << "GQLFFilter candidates with eigenFilter: " << accumulate(candidates_count, candidates_count+n, sum) << std::endl;
     FilterVertices::GQLFilter(data_graph, query_graph, candidates, candidates_count,false);
-    std::cout << "GQLFFilter candidates without eigenFilter: " << *candidates_count << std::endl;
+    std::cout << "GQLFFilter candidates without eigenFilter: " << accumulate(candidates_count, candidates_count+n, sum) << std::endl;
+
+    FilterVertices::TSOFilter(data_graph, query_graph, candidates, candidates_count,tso_order,tso_tree,true);
+    std::cout << "TSOFilter candidates with eigenFilter: " << accumulate(candidates_count, candidates_count+n, sum) << std::endl;
+    FilterVertices::TSOFilter(data_graph, query_graph, candidates, candidates_count,tso_order,tso_tree,false);
+    std::cout << "TSOFilter candidates without eigenFilter: " << accumulate(candidates_count, candidates_count+n, sum) << std::endl;
 
 }
 

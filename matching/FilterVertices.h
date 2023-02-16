@@ -18,8 +18,7 @@ public:
     static bool NLFFilter(Graph* data_graph, Graph* query_graph, ui** &candidates, ui* &candidates_count,bool isEigenCheck);
     static bool GQLFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,bool isEigenCheck);
     static bool TSOFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-                          ui *&order,
-                          TreeNode *&tree);
+                          ui *&order,TreeNode *&tree,bool isEigenCheck);
     static bool CFLFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
                               ui *&order, TreeNode *&tree);
     static bool DPisoFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,

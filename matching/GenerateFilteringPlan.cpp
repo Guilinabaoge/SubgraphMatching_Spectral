@@ -4,17 +4,19 @@
 
 #include "GenerateFilteringPlan.h"
 #include "FilterVertices.h"
+#include "eigenHelper.h"
+#include "IO.h"
 #include <queue>
 #include <utility/graphoperations.h>
 
-//void GenerateFilteringPlan::generateTSOFilterPlan(Graph *data_graph, Graph *query_graph, TreeNode *&tree,
-//                                                   VertexID *&order) {
-//    VertexID start_vertex = selectTSOFilterStartVertex(data_graph, query_graph);
-//    VertexID* bfs_order;
-//    GraphOperations::bfsTraversal(query_graph, start_vertex, tree, bfs_order);
-//    GraphOperations::dfsTraversal(tree, start_vertex, query_graph->getVerticesCount(), order);
-//    delete[] bfs_order;
-//}
+void GenerateFilteringPlan::generateTSOFilterPlan(Graph *data_graph, Graph *query_graph, TreeNode *&tree,
+                                                   VertexID *&order,bool isEigenCheck) {
+    VertexID start_vertex = selectTSOFilterStartVertex(data_graph, query_graph,isEigenCheck);
+    VertexID* bfs_order;
+    GraphOperations::bfsTraversal(query_graph, start_vertex, tree, bfs_order);
+    GraphOperations::dfsTraversal(tree, start_vertex, query_graph->getVerticesCount(), order);
+    delete[] bfs_order;
+}
 
 //void GenerateFilteringPlan::generateCFLFilterPlan(Graph *data_graph, Graph *query_graph, TreeNode *&tree,
 //                                                  VertexID *&order, int &level_count, ui *&level_offset) {
@@ -140,58 +142,66 @@ void GenerateFilteringPlan::generateDPisoFilterPlan(Graph *data_graph, Graph *qu
 //}
 
 
-//VertexID GenerateFilteringPlan::selectTSOFilterStartVertex(Graph *data_graph, Graph *query_graph) {
-//    auto rank_compare = [](std::pair<VertexID, double> l, std::pair<VertexID, double> r) {
-//        return l.second < r.second;
-//    };
-//    // Maximum priority queue.
-//    std::priority_queue<std::pair<VertexID, double>, std::vector<std::pair<VertexID, double>>, decltype(rank_compare)> rank_queue(rank_compare);
-//
-//    // Compute the ranking.
-//    for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
-//        VertexID query_vertex = i;
-//        LabelID label = query_graph->getVertexLabel(query_vertex);
-//        ui degree = query_graph->getVertexDegree(query_vertex);
-//        ui frequency = data_graph->getLabelsFrequency(label);
-//        double rank = frequency / (double)degree;
-//        rank_queue.push(std::make_pair(query_vertex, rank));
-//    }
-//
-//    // Keep the top-3.
-//    while (rank_queue.size() > 3) {
-//        rank_queue.pop();
-//    }
-//
-//    // Pick the one with the smallest number of candidates.
-//    VertexID start_vertex = 0;
-//    ui min_candidates_num = data_graph->getGraphMaxLabelFrequency() + 1;
-//    while (!rank_queue.empty()) {
-//        VertexID query_vertex = rank_queue.top().first;
-//
-//        if (rank_queue.size() == 1) {
-//            ui count;
-//            FilterVertices::computeCandidateWithNLF(data_graph, query_graph, query_vertex, count);
-//            if (count < min_candidates_num) {
-//                start_vertex = query_vertex;
-//            }
-//        }
-//        else {
-//            LabelID label = query_graph->getVertexLabel(query_vertex);
-//            ui frequency = data_graph->getLabelsFrequency(label);
-//            if (frequency / (double)data_graph->getVerticesCount() <= 0.05) {
-//                ui count;
-//                FilterVertices::computeCandidateWithNLF(data_graph, query_graph, query_vertex, count);
-//                if (count < min_candidates_num) {
-//                    start_vertex = query_vertex;
-//                    min_candidates_num = count;
-//                }
-//            }
-//        }
-//        rank_queue.pop();
-//    }
-//
-//    return start_vertex;
-//}
+VertexID GenerateFilteringPlan::selectTSOFilterStartVertex(Graph *data_graph, Graph *query_graph,bool isEigenCheck) {
+    auto rank_compare = [](std::pair<VertexID, double> l, std::pair<VertexID, double> r) {
+        return l.second < r.second;
+    };
+    // Maximum priority queue.
+    std::priority_queue<std::pair<VertexID, double>, std::vector<std::pair<VertexID, double>>, decltype(rank_compare)> rank_queue(rank_compare);
+
+    // Compute the ranking.
+    for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
+        VertexID query_vertex = i;
+        LabelID label = query_graph->getVertexLabel(query_vertex);
+        ui degree = query_graph->getVertexDegree(query_vertex);
+        ui frequency = data_graph->getLabelsFrequency(label);
+        double rank = frequency / (double)degree;
+        rank_queue.push(std::make_pair(query_vertex, rank));
+    }
+
+    // Keep the top-3.
+    while (rank_queue.size() > 3) {
+        rank_queue.pop();
+    }
+
+    int top_s = 30;
+    MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
+    MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
+    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
+    datagraph_eigenvalue = openData("youtube.csv");
+
+    // Pick the one with the smallest number of candidates.
+    VertexID start_vertex = 0;
+    ui min_candidates_num = data_graph->getGraphMaxLabelFrequency() + 1;
+    while (!rank_queue.empty()) {
+        VertexID query_vertex = rank_queue.top().first;
+
+        if (rank_queue.size() == 1) {
+            ui count;
+            ui* fill;
+            FilterVertices::computeCandidateWithNLF(data_graph, query_graph, query_vertex, count,fill,datagraph_eigenvalue,querygraph_eigenvalue,isEigenCheck);
+            if (count < min_candidates_num) {
+                start_vertex = query_vertex;
+            }
+        }
+        else {
+            LabelID label = query_graph->getVertexLabel(query_vertex);
+            ui frequency = data_graph->getLabelsFrequency(label);
+            if (frequency / (double)data_graph->getVerticesCount() <= 0.05) {
+                ui count;
+                ui* fill;
+                FilterVertices::computeCandidateWithNLF(data_graph, query_graph, query_vertex, count,fill,datagraph_eigenvalue,querygraph_eigenvalue,isEigenCheck);
+                if (count < min_candidates_num) {
+                    start_vertex = query_vertex;
+                    min_candidates_num = count;
+                }
+            }
+        }
+        rank_queue.pop();
+    }
+
+    return start_vertex;
+}
 
 //VertexID GenerateFilteringPlan::selectCFLFilterStartVertex(Graph *data_graph, Graph *query_graph) {
 //    auto rank_compare = [](std::pair<VertexID, double> l, std::pair<VertexID, double> r) {

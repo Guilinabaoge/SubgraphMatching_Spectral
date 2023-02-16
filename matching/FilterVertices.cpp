@@ -11,43 +11,43 @@
 
 #include <Eigen/Core>
 #include <Eigen/SparseCore>
-#include "eigenHelper.cpp"
-#include "IO.cpp"
+#include "eigenHelper.h"
+#include "IO.h"
 
 #define INVALID_VERTEX_ID 100000000
 using namespace Eigen;
 
-bool
-FilterVertices::EFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count){
-    allocateBuffer(data_graph, query_graph, candidates, candidates_count);
-    int top_s = 5;
-    MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
-    MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
-
-    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
-//    MTcalc12(data_graph,data_graph->getGraphMaxDegree(),datagraph_eigenvalue,true,top_s);
-//    saveData("yeast.csv", datagraph_eigenvalue);
-    datagraph_eigenvalue = openData("yeast.csv");
-
-    for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
-        for (ui j = 0; j < data_graph->getVerticesCount(); ++j) {
-                // Top Eigenvalue check
-            bool top_s_check = true;
-            for (ui e=0; e<5; e++){
-                if (datagraph_eigenvalue.row(j)[e] < querygraph_eigenvalue.row(i)[e]){
-                    top_s_check = false;
-                }
-            }
-            //TODO something wrong here
-            if(top_s_check){
-                candidates[i][candidates_count[i]++] = j;
-            }
-        }
-        if (candidates_count[i] == 0) {
-            return false;
-        }
-        return true;
-}}
+//bool
+//FilterVertices::EFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count){
+//    allocateBuffer(data_graph, query_graph, candidates, candidates_count);
+//    int top_s = 5;
+//    MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
+//    MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
+//
+//    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
+////    MTcalc12(data_graph,data_graph->getGraphMaxDegree(),datagraph_eigenvalue,true,top_s);
+////    saveData("yeast.csv", datagraph_eigenvalue);
+//    datagraph_eigenvalue = openData("yeast.csv");
+//
+//    for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
+//        for (ui j = 0; j < data_graph->getVerticesCount(); ++j) {
+//                // Top Eigenvalue check
+//            bool top_s_check = true;
+//            for (ui e=0; e<5; e++){
+//                if (datagraph_eigenvalue.row(j)[e] < querygraph_eigenvalue.row(i)[e]){
+//                    top_s_check = false;
+//                }
+//            }
+//            //TODO something wrong here
+//            if(top_s_check){
+//                candidates[i][candidates_count[i]++] = j;
+//            }
+//        }
+//        if (candidates_count[i] == 0) {
+//            return false;
+//        }
+//        return true;
+//}}
 
 bool
 FilterVertices::LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, bool isEigenCheck) {
@@ -143,7 +143,6 @@ FilterVertices::GQLFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
     if (!NLFFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck))
         return false;
 
-
     // Allocate buffer.
     ui query_vertex_num = query_graph->getVerticesCount();
     ui data_vertex_num = data_graph->getVerticesCount();
@@ -213,42 +212,49 @@ FilterVertices::GQLFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
     return isCandidateSetValid(candidates, candidates_count, query_vertex_num);
 }
 
-//bool
-//FilterVertices::TSOFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-//                          ui *&order, TreeNode *&tree) {
-//    allocateBuffer(data_graph, query_graph, candidates, candidates_count);
-//    GenerateFilteringPlan::generateTSOFilterPlan(data_graph, query_graph, tree, order);
-//
-//    ui query_vertex_num = query_graph->getVerticesCount();
-//
-//    // Get the candidates of the start vertex.
-//    VertexID start_vertex = order[0];
-//    computeCandidateWithNLF(data_graph, query_graph, start_vertex, candidates_count[start_vertex], candidates[start_vertex]);
-//
-//    ui* updated_flag = new ui[data_graph->getVerticesCount()];
-//    ui* flag = new ui[data_graph->getVerticesCount()];
-//    std::fill(flag, flag + data_graph->getVerticesCount(), 0);
-//
-//    for (ui i = 1; i < query_vertex_num; ++i) {
-//        VertexID query_vertex = order[i];
-//        TreeNode& node = tree[query_vertex];
-//        generateCandidates(data_graph, query_graph, query_vertex, &node.parent_, 1, candidates, candidates_count, flag, updated_flag);
-//    }
-//
-//    for (int i = query_vertex_num - 1; i >= 0; --i) {
-//        VertexID query_vertex = order[i];
-//        TreeNode& node = tree[query_vertex];
-//        if (node.children_count_ > 0) {
-//            pruneCandidates(data_graph, query_graph, query_vertex, node.children_, node.children_count_, candidates, candidates_count, flag, updated_flag);
-//        }
-//    }
-//
-//    compactCandidates(candidates, candidates_count, query_vertex_num);
-//
-//    delete[] updated_flag;
-//    delete[] flag;
-//    return isCandidateSetValid(candidates, candidates_count, query_vertex_num);
-//}
+bool
+FilterVertices::TSOFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
+                          ui *&order, TreeNode *&tree,bool isEigenCheck) {
+    allocateBuffer(data_graph, query_graph, candidates, candidates_count);
+    GenerateFilteringPlan::generateTSOFilterPlan(data_graph, query_graph, tree, order,isEigenCheck);
+
+    ui query_vertex_num = query_graph->getVerticesCount();
+
+    int top_s = 30;
+    MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
+    MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
+    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
+    datagraph_eigenvalue = openData("youtube.csv");
+
+    // Get the candidates of the start vertex.
+    VertexID start_vertex = order[0];
+    computeCandidateWithNLF(data_graph, query_graph, start_vertex, candidates_count[start_vertex],
+                            candidates[start_vertex],datagraph_eigenvalue,querygraph_eigenvalue,isEigenCheck);
+
+    ui* updated_flag = new ui[data_graph->getVerticesCount()];
+    ui* flag = new ui[data_graph->getVerticesCount()];
+    std::fill(flag, flag + data_graph->getVerticesCount(), 0);
+
+    for (ui i = 1; i < query_vertex_num; ++i) {
+        VertexID query_vertex = order[i];
+        TreeNode& node = tree[query_vertex];
+        generateCandidates(data_graph, query_graph, query_vertex, &node.parent_, 1, candidates, candidates_count, flag, updated_flag);
+    }
+
+    for (int i = query_vertex_num - 1; i >= 0; --i) {
+        VertexID query_vertex = order[i];
+        TreeNode& node = tree[query_vertex];
+        if (node.children_count_ > 0) {
+            pruneCandidates(data_graph, query_graph, query_vertex, node.children_, node.children_count_, candidates, candidates_count, flag, updated_flag);
+        }
+    }
+
+    compactCandidates(candidates, candidates_count, query_vertex_num);
+
+    delete[] updated_flag;
+    delete[] flag;
+    return isCandidateSetValid(candidates, candidates_count, query_vertex_num);
+}
 
 //bool
 //FilterVertices::CFLFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,

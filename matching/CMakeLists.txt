@@ -1,4 +1,8 @@
 set(SUBGRAPH_MATCHING_FILE_LIST
+        IO.cpp
+        IO.h
+        eigenHelper.cpp
+        eigenHelper.h
         matchingcommand.cpp
         matchingcommand.h
         FilterVertices.cpp
