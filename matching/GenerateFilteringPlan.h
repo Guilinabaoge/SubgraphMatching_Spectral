@@ -12,7 +12,7 @@
 class GenerateFilteringPlan {
 public:
     static void generateTSOFilterPlan(Graph *data_graph, Graph *query_graph, TreeNode *&tree,
-                                           VertexID *&order,bool isEigenCheck);
+                                           VertexID *&order,bool isEigenCheck,int top_s);
     static void generateCFLFilterPlan(Graph *data_graph, Graph *query_graph, TreeNode *&tree,
                                       VertexID *&order, int &level_count, ui *&level_offset);
     static void generateDPisoFilterPlan(Graph *data_graph, Graph *query_graph, TreeNode *&tree,
@@ -20,7 +20,7 @@ public:
     static void generateCECIFilterPlan(Graph *data_graph, Graph *query_graph, TreeNode *&tree,
                                        VertexID *&order);
 private:
-    static VertexID selectTSOFilterStartVertex(Graph *data_graph, Graph *query_graph,bool isEigenCheck);
+    static VertexID selectTSOFilterStartVertex(Graph *data_graph, Graph *query_graph,bool isEigenCheck,int top_s);
     static VertexID selectCFLFilterStartVertex(Graph *data_graph, Graph *query_graph);
     static VertexID selectDPisoStartVertex(Graph *data_graph, Graph *query_graph);
     static VertexID selectCECIStartVertex(Graph *data_graph, Graph *query_graph);

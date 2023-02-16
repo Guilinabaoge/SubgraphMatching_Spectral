@@ -17,43 +17,38 @@
 #define INVALID_VERTEX_ID 100000000
 using namespace Eigen;
 
-//bool
-//FilterVertices::EFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count){
-//    allocateBuffer(data_graph, query_graph, candidates, candidates_count);
-//    int top_s = 5;
-//    MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
-//    MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
-//
-//    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
-////    MTcalc12(data_graph,data_graph->getGraphMaxDegree(),datagraph_eigenvalue,true,top_s);
-////    saveData("yeast.csv", datagraph_eigenvalue);
-//    datagraph_eigenvalue = openData("yeast.csv");
-//
-//    for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
-//        for (ui j = 0; j < data_graph->getVerticesCount(); ++j) {
-//                // Top Eigenvalue check
-//            bool top_s_check = true;
-//            for (ui e=0; e<5; e++){
-//                if (datagraph_eigenvalue.row(j)[e] < querygraph_eigenvalue.row(i)[e]){
-//                    top_s_check = false;
-//                }
-//            }
-//            //TODO something wrong here
-//            if(top_s_check){
-//                candidates[i][candidates_count[i]++] = j;
-//            }
-//        }
-//        if (candidates_count[i] == 0) {
-//            return false;
-//        }
-//        return true;
-//}}
+bool
+FilterVertices::EFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,int top_s){
+    allocateBuffer(data_graph, query_graph, candidates, candidates_count);
+    MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
+    MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
+    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
+    datagraph_eigenvalue = openData("youtube.csv");
+
+    for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
+        for (ui j = 0; j < data_graph->getVerticesCount(); ++j) {
+            // Top Eigenvalue check
+            bool top_s_check = true;
+            for (ui e=0; e<top_s; e++){
+                if (datagraph_eigenvalue.row(j)[e] < querygraph_eigenvalue.row(i)[e]){
+                    top_s_check = false;
+                }
+            }
+            //TODO something wrong here
+            if(top_s_check){
+                candidates[i][candidates_count[i]++] = j;
+            }
+        }
+        if (candidates_count[i] == 0) {
+            return false;
+        }
+        return true;
+}}
 
 bool
-FilterVertices::LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, bool isEigenCheck) {
+FilterVertices::LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, bool isEigenCheck,int top_s) {
     if (isEigenCheck){
         allocateBuffer(data_graph, query_graph, candidates, candidates_count);
-        int top_s = 30;
         MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
         MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
 
@@ -74,7 +69,7 @@ FilterVertices::LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
                 if (data_graph->getVertexDegree(data_vertex) >= degree) {
                     // Top Eigenvalue check
                     bool top_s_check = true;
-                    for (ui e=0; e<5; e++){
+                    for (ui e=0; e<top_s; e++){
                         if (datagraph_eigenvalue.row(data_vertex)[e] < querygraph_eigenvalue.row(i)[e]){
                             top_s_check = false;
                         }
@@ -115,10 +110,9 @@ FilterVertices::LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
 }
 
 bool
-FilterVertices::NLFFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, bool isEigenCheck) {
+FilterVertices::NLFFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, bool isEigenCheck, int top_s) {
     allocateBuffer(data_graph, query_graph, candidates, candidates_count);
 
-    int top_s = 30;
     MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
     MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
     MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
@@ -126,7 +120,8 @@ FilterVertices::NLFFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
 
     for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
         VertexID query_vertex = i;
-        computeCandidateWithNLF(data_graph, query_graph, query_vertex, candidates_count[query_vertex], candidates[query_vertex],datagraph_eigenvalue,querygraph_eigenvalue,isEigenCheck);
+        computeCandidateWithNLF(data_graph, query_graph, query_vertex, candidates_count[query_vertex],candidates[query_vertex],
+                                datagraph_eigenvalue,querygraph_eigenvalue,isEigenCheck,top_s);
 
 
         if (candidates_count[query_vertex] == 0) {
@@ -138,9 +133,9 @@ FilterVertices::NLFFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
 }
 
 bool
-FilterVertices::GQLFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, bool isEigenCheck) {
+FilterVertices::GQLFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, bool isEigenCheck,int top_s) {
     // Local refinement.
-    if (!NLFFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck))
+    if (!NLFFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck,top_s))
         return false;
 
     // Allocate buffer.
@@ -214,13 +209,12 @@ FilterVertices::GQLFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
 
 bool
 FilterVertices::TSOFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-                          ui *&order, TreeNode *&tree,bool isEigenCheck) {
+                          ui *&order, TreeNode *&tree,bool isEigenCheck,int top_s) {
     allocateBuffer(data_graph, query_graph, candidates, candidates_count);
-    GenerateFilteringPlan::generateTSOFilterPlan(data_graph, query_graph, tree, order,isEigenCheck);
+    GenerateFilteringPlan::generateTSOFilterPlan(data_graph, query_graph, tree, order,isEigenCheck,top_s);
 
     ui query_vertex_num = query_graph->getVerticesCount();
 
-    int top_s = 30;
     MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
     MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
     MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
@@ -229,7 +223,7 @@ FilterVertices::TSOFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
     // Get the candidates of the start vertex.
     VertexID start_vertex = order[0];
     computeCandidateWithNLF(data_graph, query_graph, start_vertex, candidates_count[start_vertex],
-                            candidates[start_vertex],datagraph_eigenvalue,querygraph_eigenvalue,isEigenCheck);
+                            candidates[start_vertex],datagraph_eigenvalue,querygraph_eigenvalue,isEigenCheck,top_s);
 
     ui* updated_flag = new ui[data_graph->getVerticesCount()];
     ui* flag = new ui[data_graph->getVerticesCount()];
@@ -804,7 +798,7 @@ bool FilterVertices::isCandidateSetValid(ui **&candidates, ui *&candidates_count
 
 void
 FilterVertices::computeCandidateWithNLF(Graph *data_graph, Graph *query_graph, VertexID query_vertex,
-                                               ui &count, ui *buffer,  MatrixXd datagraph_eigen, MatrixXd querygraph_eigen,bool isEigenCheck) {
+                                               ui &count, ui *buffer,  MatrixXd datagraph_eigen, MatrixXd querygraph_eigen,bool isEigenCheck,int top_s) {
     LabelID label = query_graph->getVertexLabel(query_vertex);
     ui degree = query_graph->getVertexDegree(query_vertex);
 #if OPTIMIZED_LABELED_GRAPH == 1
@@ -835,7 +829,7 @@ FilterVertices::computeCandidateWithNLF(Graph *data_graph, Graph *query_graph, V
                     // EF check
                     if (isEigenCheck){
                         bool top_s_check = true;
-                        for (ui e=0; e<5; e++){
+                        for (ui e=0; e<top_s; e++){
                             if (datagraph_eigen.row(data_vertex)[e] < querygraph_eigen.row(query_vertex)[e]){
                                 top_s_check = false;
                             }

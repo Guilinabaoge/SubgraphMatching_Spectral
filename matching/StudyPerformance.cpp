@@ -15,6 +15,9 @@
 #include "BuildTable.h"
 #include "GenerateQueryPlan.h"
 #include "EvaluateQuery.h"
+#include "IO.h"
+#include "eigenHelper.h"
+
 
 #define NANOSECTOSEC(elapsed_time) ((elapsed_time)/(double)1000000000)
 #define BYTESTOMB(memory_cost) ((memory_cost)/(double)(1024 * 1024))
@@ -139,30 +142,33 @@ int main(int argc, char** argv){
     ui* tso_order = NULL;
     TreeNode* tso_tree = NULL;
     int n = 32, sum=0;
+    int top_s = 10;
 
-//    FilterVertices::EFilter(data_graph, query_graph, candidates, candidates_count);
-//    std::cout << "candidates with only eigenFilter: " << *candidates_count << std::endl;
+//    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
+//    MTcalc12(data_graph,data_graph->getGraphMaxDegree(),datagraph_eigenvalue,true,top_s);
+//    saveData("youtube.csv", datagraph_eigenvalue);
 
-    FilterVertices::LDFFilter(data_graph, query_graph, candidates, candidates_count,true);
+    FilterVertices::EFilter(data_graph, query_graph, candidates, candidates_count,top_s);
+    std::cout << "Candidates with only eigenFilter: " << accumulate(candidates_count, candidates_count+n, sum) << std::endl;
+
+    FilterVertices::LDFFilter(data_graph, query_graph, candidates, candidates_count,true,top_s);
     std::cout << "LDFFilter candidates with eigenFilter: " << accumulate(candidates_count, candidates_count+n, sum) << std::endl;
-    FilterVertices::LDFFilter(data_graph, query_graph, candidates, candidates_count,false);
+    FilterVertices::LDFFilter(data_graph, query_graph, candidates, candidates_count,false,top_s);
     std::cout << "LDFFilter candidates without eigenFilter: " << accumulate(candidates_count, candidates_count+n, sum) << std::endl;
 
-
-    FilterVertices::NLFFilter(data_graph, query_graph, candidates, candidates_count, true);
+    FilterVertices::NLFFilter(data_graph, query_graph, candidates, candidates_count, true,top_s);
     std::cout << "NLFilter candidates with eigenFilter: " << accumulate(candidates_count, candidates_count+n, sum) << std::endl;
-    FilterVertices::NLFFilter(data_graph, query_graph, candidates, candidates_count, false);
+    FilterVertices::NLFFilter(data_graph, query_graph, candidates, candidates_count, false,top_s);
     std::cout << "NLFilter candidates without eigenFilter: " << accumulate(candidates_count, candidates_count+n, sum) << std::endl;
 
-
-    FilterVertices::GQLFilter(data_graph, query_graph, candidates, candidates_count,true);
+    FilterVertices::GQLFilter(data_graph, query_graph, candidates, candidates_count,true,top_s);
     std::cout << "GQLFFilter candidates with eigenFilter: " << accumulate(candidates_count, candidates_count+n, sum) << std::endl;
-    FilterVertices::GQLFilter(data_graph, query_graph, candidates, candidates_count,false);
+    FilterVertices::GQLFilter(data_graph, query_graph, candidates, candidates_count,false,top_s);
     std::cout << "GQLFFilter candidates without eigenFilter: " << accumulate(candidates_count, candidates_count+n, sum) << std::endl;
 
-    FilterVertices::TSOFilter(data_graph, query_graph, candidates, candidates_count,tso_order,tso_tree,true);
+    FilterVertices::TSOFilter(data_graph, query_graph, candidates, candidates_count,tso_order,tso_tree,true,top_s);
     std::cout << "TSOFilter candidates with eigenFilter: " << accumulate(candidates_count, candidates_count+n, sum) << std::endl;
-    FilterVertices::TSOFilter(data_graph, query_graph, candidates, candidates_count,tso_order,tso_tree,false);
+    FilterVertices::TSOFilter(data_graph, query_graph, candidates, candidates_count,tso_order,tso_tree,false,top_s);
     std::cout << "TSOFilter candidates without eigenFilter: " << accumulate(candidates_count, candidates_count+n, sum) << std::endl;
 
 }

@@ -10,8 +10,8 @@
 #include <utility/graphoperations.h>
 
 void GenerateFilteringPlan::generateTSOFilterPlan(Graph *data_graph, Graph *query_graph, TreeNode *&tree,
-                                                   VertexID *&order,bool isEigenCheck) {
-    VertexID start_vertex = selectTSOFilterStartVertex(data_graph, query_graph,isEigenCheck);
+                                                   VertexID *&order,bool isEigenCheck, int top_s) {
+    VertexID start_vertex = selectTSOFilterStartVertex(data_graph, query_graph,isEigenCheck,top_s);
     VertexID* bfs_order;
     GraphOperations::bfsTraversal(query_graph, start_vertex, tree, bfs_order);
     GraphOperations::dfsTraversal(tree, start_vertex, query_graph->getVerticesCount(), order);
@@ -142,7 +142,7 @@ void GenerateFilteringPlan::generateDPisoFilterPlan(Graph *data_graph, Graph *qu
 //}
 
 
-VertexID GenerateFilteringPlan::selectTSOFilterStartVertex(Graph *data_graph, Graph *query_graph,bool isEigenCheck) {
+VertexID GenerateFilteringPlan::selectTSOFilterStartVertex(Graph *data_graph, Graph *query_graph,bool isEigenCheck,int top_s) {
     auto rank_compare = [](std::pair<VertexID, double> l, std::pair<VertexID, double> r) {
         return l.second < r.second;
     };
@@ -164,7 +164,6 @@ VertexID GenerateFilteringPlan::selectTSOFilterStartVertex(Graph *data_graph, Gr
         rank_queue.pop();
     }
 
-    int top_s = 30;
     MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
     MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
     MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
@@ -179,7 +178,7 @@ VertexID GenerateFilteringPlan::selectTSOFilterStartVertex(Graph *data_graph, Gr
         if (rank_queue.size() == 1) {
             ui count;
             ui* fill;
-            FilterVertices::computeCandidateWithNLF(data_graph, query_graph, query_vertex, count,fill,datagraph_eigenvalue,querygraph_eigenvalue,isEigenCheck);
+            FilterVertices::computeCandidateWithNLF(data_graph, query_graph, query_vertex, count,fill,datagraph_eigenvalue,querygraph_eigenvalue,isEigenCheck,top_s);
             if (count < min_candidates_num) {
                 start_vertex = query_vertex;
             }
@@ -190,7 +189,7 @@ VertexID GenerateFilteringPlan::selectTSOFilterStartVertex(Graph *data_graph, Gr
             if (frequency / (double)data_graph->getVerticesCount() <= 0.05) {
                 ui count;
                 ui* fill;
-                FilterVertices::computeCandidateWithNLF(data_graph, query_graph, query_vertex, count,fill,datagraph_eigenvalue,querygraph_eigenvalue,isEigenCheck);
+                FilterVertices::computeCandidateWithNLF(data_graph, query_graph, query_vertex, count,fill,datagraph_eigenvalue,querygraph_eigenvalue,isEigenCheck,top_s);
                 if (count < min_candidates_num) {
                     start_vertex = query_vertex;
                     min_candidates_num = count;
