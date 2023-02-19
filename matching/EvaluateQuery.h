@@ -28,12 +28,17 @@ auto extendable_vertex_compare = [](std::pair<std::pair<VertexID, ui>, ui> l, st
 typedef std::priority_queue<std::pair<std::pair<VertexID, ui>, ui>, std::vector<std::pair<std::pair<VertexID, ui>, ui>>,
         decltype(extendable_vertex_compare)> dpiso_min_pq;
 
+struct enumResult {
+    size_t embedding_cnt;
+    set<ui> results;
+};
+
 class EvaluateQuery {
 public:
     static size_t exploreGraph(const Graph *data_graph, const Graph *query_graph, Edges ***edge_matrix, ui **candidates,
                                   ui *candidates_count, ui *order, ui *pivot, size_t output_limit_num, size_t &call_count);
 
-    static size_t LFTJ(const Graph *data_graph, const Graph *query_graph, Edges ***edge_matrix, ui **candidates, ui *candidates_count,
+    static enumResult LFTJ(const Graph *data_graph, const Graph *query_graph, Edges ***edge_matrix, ui **candidates, ui *candidates_count,
                            ui *order, size_t output_limit_num, size_t &call_count);
 
     static size_t

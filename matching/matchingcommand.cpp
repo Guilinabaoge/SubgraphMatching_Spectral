@@ -21,12 +21,20 @@ MatchingCommand::MatchingCommand(const int argc, char **argv) : CommandParser(ar
     options_key[OptionKeyword::SpectrumAnalysisOrderNum] = "-order_num";
     options_key[OptionKeyword::DistributionFilePath] = "-dis_file";
     options_key[OptionKeyword::CSRFilePath] = "-csr";
+    options_key[OptionKeyword::IsEigenCheck] = "-eigen";
+    options_key[OptionKeyword::TopSEigen] = "-tops";
     processOptions();
 };
 
 void MatchingCommand::processOptions() {
+    // Eigen or not
+    options_value[OptionKeyword::IsEigenCheck] = getCommandOption(options_key[OptionKeyword::IsEigenCheck]);
+
+    // How many eigen
+    options_value[OptionKeyword::TopSEigen] = getCommandOption(options_key[OptionKeyword::TopSEigen]);
+
     // Query graph file path
-    options_value[OptionKeyword::QueryGraphFile] = getCommandOption(options_key[OptionKeyword::QueryGraphFile]);;
+    options_value[OptionKeyword::QueryGraphFile] = getCommandOption(options_key[OptionKeyword::QueryGraphFile]);
 
     // Data graph file path
     options_value[OptionKeyword::DataGraphFile] = getCommandOption(options_key[OptionKeyword::DataGraphFile]);

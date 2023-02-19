@@ -13,6 +13,7 @@ using namespace Eigen;
 
 class FilterVertices {
 public:
+    static std::string datagraphEigenMatrix;
     static bool EFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,int top_s);
     static bool LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,bool isEigenCheck,int top_s);
     static bool NLFFilter(Graph* data_graph, Graph* query_graph, ui** &candidates, ui* &candidates_count,bool isEigenCheck,int top_s);

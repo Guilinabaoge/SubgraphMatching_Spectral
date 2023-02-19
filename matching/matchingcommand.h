@@ -23,7 +23,9 @@ enum OptionKeyword {
     SpectrumAnalysisTimeLimit = 11, // -time_limit, The time limit for executing a query in seconds
     SpectrumAnalysisOrderNum = 12, // -order_num, The number of matching orders generated
     DistributionFilePath = 13,          // -dis_file, The output path of the distribution array
-    CSRFilePath = 14                    // -csr, The input csr file path
+    CSRFilePath = 14,                    // -csr, The input csr file path
+    IsEigenCheck =15,                //-eigen, Boolean, choose whether to enhance the filter with eigen check or not
+    TopSEigen = 16                  //-tops,  How many eigenvalues use for eigen check
 };
 
 class MatchingCommand : public CommandParser{
@@ -36,6 +38,14 @@ private:
 
 public:
     MatchingCommand(int argc, char **argv);
+
+    std::string getEigenOrNot() {
+        return options_value[OptionKeyword::IsEigenCheck];
+    }
+
+    std::string getHowManyEigen(){
+        return options_value[OptionKeyword::TopSEigen];
+    }
 
     std::string getDataGraphFilePath() {
         return options_value[OptionKeyword::DataGraphFile];

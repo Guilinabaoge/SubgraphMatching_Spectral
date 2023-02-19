@@ -254,7 +254,7 @@ void EvaluateQuery::releaseBuffer(ui query_vertices_num, ui *idx, ui *idx_count,
     delete[] bn;
 }
 
-size_t
+enumResult
 EvaluateQuery::LFTJ(const Graph *data_graph, const Graph *query_graph, Edges ***edge_matrix, ui **candidates,
                     ui *candidates_count,
                     ui *order, size_t output_limit_num, size_t &call_count) {
@@ -265,6 +265,8 @@ EvaluateQuery::LFTJ(const Graph *data_graph, const Graph *query_graph, Edges ***
     size_t* begin_count = new size_t[query_graph->getVerticesCount()];
     memset(begin_count, 0, query_graph->getVerticesCount() * sizeof(size_t));
 #endif
+
+    enumResult s;
 
     // Generate bn.
     ui **bn;
@@ -337,6 +339,9 @@ EvaluateQuery::LFTJ(const Graph *data_graph, const Graph *query_graph, Edges ***
 #endif
 
             if (cur_depth == max_depth - 1) {
+                for (int i = 0; i<max_depth;i++){
+                    s.results.insert(embedding[i]);
+                }
                 embedding_cnt += 1;
                 visited_vertices[v] = false;
 
@@ -432,8 +437,8 @@ EvaluateQuery::LFTJ(const Graph *data_graph, const Graph *query_graph, Edges ***
     }
     delete[] qfliter_bsr_graph_;
 #endif
-
-    return embedding_cnt;
+    s.embedding_cnt = embedding_cnt;
+    return s;
 }
 
 void EvaluateQuery::generateValidCandidateIndex(ui depth, ui *idx_embedding, ui *idx_count, ui **valid_candidate_index,
