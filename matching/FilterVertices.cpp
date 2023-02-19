@@ -17,7 +17,7 @@
 #define INVALID_VERTEX_ID 100000000
 using namespace Eigen;
 
-string FilterVertices::datagraphEigenMatrix = "yeast.csv";
+string FilterVertices::datagraphEigenMatrix = "wordnet.csv";
 
 bool
 FilterVertices::EFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,int top_s){
@@ -47,6 +47,7 @@ FilterVertices::EFilter(Graph *data_graph, Graph *query_graph, ui **&candidates,
         }
         return true;
 }}
+
 
 bool
 FilterVertices::LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, bool isEigenCheck,int top_s) {
@@ -111,6 +112,7 @@ FilterVertices::LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
         return true;
     }
 }
+
 
 bool
 FilterVertices::NLFFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, bool isEigenCheck, int top_s) {
@@ -732,6 +734,50 @@ FilterVertices::CECIFilter(Graph *data_graph, Graph *query_graph, ui **&candidat
 
     return true;
 }
+
+bool
+FilterVertices::LDFWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
+                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
+                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s){
+    return FilterVertices::LDFFilter(data_graph,query_graph,candidates,candidates_count,isEigenCheck,top_s);
+}
+
+bool
+FilterVertices::NLFWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
+                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
+                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s){
+    return FilterVertices::NLFFilter(data_graph,query_graph,candidates,candidates_count,isEigenCheck,top_s);
+}
+
+bool
+FilterVertices::GQLWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
+                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
+                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s){
+    return FilterVertices::GQLFilter(data_graph,query_graph,candidates,candidates_count,isEigenCheck,top_s);
+}
+
+bool
+FilterVertices::TSOWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
+                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
+                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s){
+    return FilterVertices::TSOFilter(data_graph,query_graph,candidates,candidates_count,order,tree,isEigenCheck,top_s);
+}
+
+bool
+FilterVertices::CFLWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
+                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
+                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s){
+    return FilterVertices::CFLFilter(data_graph,query_graph,candidates,candidates_count,order,tree,isEigenCheck,top_s);
+}
+
+bool
+FilterVertices::DPisoWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
+                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
+                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s){
+    return FilterVertices::DPisoFilter(data_graph,query_graph,candidates,candidates_count,order,tree,isEigenCheck,top_s);
+}
+
+
 
 void FilterVertices::allocateBuffer(const Graph *data_graph, const Graph *query_graph, ui **&candidates,
                                     ui *&candidates_count) {

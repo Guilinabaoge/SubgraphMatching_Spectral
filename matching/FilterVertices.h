@@ -54,6 +54,46 @@ public:
 
     static double computeCandidatesFalsePositiveRatio(const Graph *data_graph, const Graph *query_graph, ui **candidates,
                                                           ui *candidates_count, std::vector<ui> &optimal_candidates_count);
+
+    static bool
+    LDFWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, ui *&order,
+               TreeNode *&tree,
+               std::vector<std::unordered_map<VertexID, std::vector<VertexID>>> &TE_Candidates,
+               std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,
+               bool isEigenCheck, int top_s);
+    static bool
+    NLFWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, ui *&order,
+               TreeNode *&tree,
+               std::vector<std::unordered_map<VertexID, std::vector<VertexID>>> &TE_Candidates,
+               std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,
+               bool isEigenCheck, int top_s);
+
+    static bool
+    GQLWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, ui *&order,
+               TreeNode *&tree,
+               std::vector<std::unordered_map<VertexID, std::vector<VertexID>>> &TE_Candidates,
+               std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,
+               bool isEigenCheck, int top_s);
+
+    static bool
+    TSOWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, ui *&order,
+               TreeNode *&tree,
+               std::vector<std::unordered_map<VertexID, std::vector<VertexID>>> &TE_Candidates,
+               std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,
+               bool isEigenCheck, int top_s);
+
+    static bool
+    CFLWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, ui *&order,
+               TreeNode *&tree,
+               std::vector<std::unordered_map<VertexID, std::vector<VertexID>>> &TE_Candidates,
+               std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,
+               bool isEigenCheck, int top_s);
+
+    static bool
+    DPisoWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, ui *&order,
+                      TreeNode *&tree, std::vector<std::unordered_map<VertexID, std::vector<VertexID>>> &TE_Candidates,
+                      std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,
+                      bool isEigenCheck, int top_s);
 private:
     static void allocateBuffer(const Graph* data_graph, const Graph* query_graph, ui** &candidates, ui* &candidates_count);
     static bool verifyExactTwigIso(const Graph *data_graph, const Graph *query_graph, ui data_vertex, ui query_vertex,
