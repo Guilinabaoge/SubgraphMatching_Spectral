@@ -10,6 +10,9 @@
 #include <fstream>
 #include <numeric>
 #include <iostream>
+#include <string>
+#include <sstream>
+#include <fstream>
 
 #include "matchingcommand.h"
 #include "graph/graph.h"
@@ -84,7 +87,7 @@ void spectrum_analysis(Graph* data_graph, Graph* query_graph, Edges*** edge_matr
     }
 }
 
-void experiment(Graph *data_graph, Graph *query_graph){
+string experiment(Graph *data_graph, Graph *query_graph){
     ui** candidates = NULL;
     ui* candidates_count = NULL;
     ui* tso_order = NULL;
@@ -116,90 +119,95 @@ void experiment(Graph *data_graph, Graph *query_graph){
         top_s = 8;
     }
 
-    int results[14];
+    static int results[14];
     int counter = 0;
 
     for(int i =0; i<7;i++){
         functptr[i](data_graph, query_graph, candidates, candidates_count,ceci_order,ceci_tree,TE_Candidates,NTE_Candidates,true,top_s);
         results[counter] = accumulate(candidates_count, candidates_count+query_graph->getVerticesCount(), sum);
         counter++;
-        std::cout << i << "candidates with eigenFilter: " << accumulate(candidates_count, candidates_count+query_graph->getVerticesCount(), sum) << std::endl;
         functptr[i](data_graph, query_graph, candidates, candidates_count,ceci_order,ceci_tree,TE_Candidates,NTE_Candidates,false,top_s);
         results[counter] = accumulate(candidates_count, candidates_count+query_graph->getVerticesCount(), sum);
         counter++;
-        std::cout << i << "candidates without eigenFilter: " << accumulate(candidates_count, candidates_count+query_graph->getVerticesCount(), sum) << std::endl;
     }
 
-    for (int i = 0; i < 14; i++) {
-        std::cout << results[i] << ' ';
+    string results_string = "";
+    for (int i=0; i<14; i++){
+        results_string.append(std::to_string(results[i])+",");
     }
+    results_string.pop_back();
+    results_string.append("\n");
 
-
-
+    return results_string;
 }
 
 int main(int argc, char** argv){
-    MatchingCommand command(argc, argv);
-    std::string input_query_graph_file = command.getQueryGraphFilePath();
-    std::string input_data_graph_file = command.getDataGraphFilePath();
-    std::string input_csr_file_path = command.getCSRFilePath();
-
-    /**
-     * Output the command line information.
-     */
-    std::cout << "Command Line:" << std::endl;
-    std::cout << "\tData Graph CSR: " << input_csr_file_path << std::endl;
-    std::cout << "\tData Graph: " << input_data_graph_file << std::endl;
-    std::cout << "\tQuery Graph: " << input_query_graph_file << std::endl;
-    std::cout << "--------------------------------------------------------------------" << std::endl;
-
-    /**
-     * Load input graphs.
-     */
-
-    std::cout << "Load graphs..." << std::endl;
-
-    auto start = std::chrono::high_resolution_clock::now();
-
-    Graph* query_graph = new Graph(true);
-    query_graph->loadGraphFromFile(input_query_graph_file);
-    query_graph->buildCoreTable();
-
-    Graph* data_graph = new Graph(true);
-
-    if (input_csr_file_path.empty()) {
-        data_graph->loadGraphFromFile(input_data_graph_file);
-    }
-    else {
-        std::string degree_file_path = input_csr_file_path + "_deg.bin";
-        std::string edge_file_path = input_csr_file_path + "_adj.bin";
-        std::string label_file_path = input_csr_file_path + "_label.bin";
-        data_graph->loadGraphFromFileCompressed(degree_file_path, edge_file_path, label_file_path);
-    }
-
-    auto end = std::chrono::high_resolution_clock::now();
-
-    double load_graphs_time_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-
-    std::cout << "-----" << std::endl;
-    std::cout << "Query Graph Meta Information" << std::endl;
-    query_graph->printGraphMetaData();
-    std::cout << "-----" << std::endl;
-    data_graph->printGraphMetaData();
-
-    std::cout << "--------------------------------------------------------------------" << std::endl;
-
-    std::cout << "Start queries..." << std::endl;
-    std::cout << "-----" << std::endl;
-    std::cout << "Filter candidates..." << std::endl;
-
-    start = std::chrono::high_resolution_clock::now();
-
     //    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), 35);
-//    MTcalc12(data_graph,data_graph->getGraphMaxDegree(),datagraph_eigenvalue,true,35);
-//    saveData("wordnet.csv", datagraph_eigenvalue);
+    //    MTcalc12(data_graph,data_graph->getGraphMaxDegree(),datagraph_eigenvalue,true,35);
+    //    saveData("wordnet.csv", datagraph_eigenvalue);
 
-    experiment(data_graph,query_graph);
+    //  -d ../../test/reallife_dataset/wordnet/data_graph/wordnet.graph -q ../../test/reallife_dataset/wordnet/query_graph/query_dense_8_1.graph -filter GQL -order GQL -engine LFTJ -num MAX -eigen 1 -tops 4
+    int query_number[200];
+    for (int i=0;i<200;i++){
+        query_number[i] = i+1;
+    }
+    //Yeast
+    int query_vertices_dense[5]={4,8,16,24,32};
+    int query_vertices_sparse[4]={8,16,24,32};
+
+    //Wordnet
+    int query_vertices_dense_v2[5]={4,8,12,16,20};
+    int query_vertices_sparse_v2[4]={8,12,16,20};
+
+
+    string querypath[1800];
+    int counter = 0;
+
+    for(int i=0; i<5;i++){
+        for (int j=0;j<200;j++){
+            std::ostringstream oss;
+            oss << "../../test/reallife_dataset/wordnet/query_graph/query_dense_" << query_vertices_dense_v2[i] <<"_" << query_number[j]<< ".graph";
+            std::string var = oss.str();
+            querypath[counter] = var;
+            counter++;
+        }
+    }
+
+    for(int i=0; i<4;i++){
+        for (int j=0;j<200;j++){
+            std::ostringstream oss;
+            oss << "../../test/reallife_dataset/wordnet/query_graph/query_dense_" << query_vertices_sparse_v2[i] <<"_" << query_number[j]<< ".graph";
+            std::string var = oss.str();
+            querypath[counter] = var;
+            counter++;
+        }
+    }
+
+    std::string input_data_graph_file = "../../test/reallife_dataset/wordnet/data_graph/wordnet.graph";
+    Graph* data_graph = new Graph(true);
+    data_graph->loadGraphFromFile(input_data_graph_file);
+
+    std::ofstream myfile;
+    myfile.open ("wordnetexperiment.csv",std::ios_base::app);
+    myfile << "Query_NUmber,LDF+EF,LDF,NLF+EF,NLF,GQL+EF,GQL,TSOF+EF,TSOF,CFL+EF,CFL,DPiso+EF,Dpiso,CECIF+EF,CECIF\n";
+    myfile.close();
+
+    for (int i=771; i<1800;i++){
+        Graph* query_graph = new Graph(true);
+        query_graph->loadGraphFromFile(querypath[i]);
+        query_graph->buildCoreTable();
+        string results = to_string(i)+",";
+        string results2 = results.append(experiment(data_graph,query_graph));
+        myfile.open ("wordnetexperiment.csv",std::ios_base::app);
+        myfile<<results2;
+        myfile.close();
+        cout << i << endl;
+    }
+
+
+
+
+
 }
 
 //int main(int argc, char** argv) {
