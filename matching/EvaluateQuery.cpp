@@ -365,6 +365,7 @@ EvaluateQuery::LFTJ(const Graph *data_graph, const Graph *query_graph, Edges ***
                 generateValidCandidateIndex(cur_depth, idx_embedding, idx_count, valid_candidate_idx, edge_matrix, bn,
                                             bn_count, order, temp_buffer);
 
+
 #ifdef ENABLE_FAILING_SET
                 if (idx_count[cur_depth] == 0) {
                     vec_failing_set[cur_depth - 1] = ancestors[order[cur_depth]];
@@ -448,6 +449,7 @@ void EvaluateQuery::generateValidCandidateIndex(ui depth, ui *idx_embedding, ui 
     VertexID previous_bn = bn[depth][0];
     ui previous_index_id = idx_embedding[previous_bn];
     ui valid_candidates_count = 0;
+
 
 #if ENABLE_QFLITER == 1
     BSRGraph &bsr_graph = *qfliter_bsr_graph_[previous_bn][u];

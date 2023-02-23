@@ -210,8 +210,10 @@ string experiment(Graph *data_graph, Graph *query_graph){
 //
 //}
 
-int experiment2(int argc, char** argv,string dgraph_path,string qgraph_path,string filter,string order,string engine,
-                string eigen, string tops,ui* candidates_unique,ui* resuit_unique){
+int solveGraphQuery(string dgraph_path, string qgraph_path, string filter, string order, string engine,
+                    string eigen, string tops, int* candidate_vertices, int* result_vertices){
+    int argc = 0;
+    char** argv;
     MatchingCommand command(argc, argv);
     std::string input_query_graph_file = qgraph_path;
     std::string input_data_graph_file = dgraph_path;
@@ -228,6 +230,7 @@ int experiment2(int argc, char** argv,string dgraph_path,string qgraph_path,stri
     /**
      * Output the command line information.
      */
+#ifdef PRINT
     std::cout << "Command Line:" << std::endl;
     std::cout << "\tData Graph CSR: " << input_csr_file_path << std::endl;
     std::cout << "\tData Graph: " << input_data_graph_file << std::endl;
@@ -243,11 +246,14 @@ int experiment2(int argc, char** argv,string dgraph_path,string qgraph_path,stri
     std::cout << "\tTop-s eigen value?: " << input_tops << std::endl;
 
     std::cout << "--------------------------------------------------------------------" << std::endl;
-
+#endif
     /**
      * Load input graphs.
      */
+#ifdef PRINT
     std::cout << "Load graphs..." << std::endl;
+#endif
+
 
     auto start = std::chrono::high_resolution_clock::now();
 
@@ -271,6 +277,11 @@ int experiment2(int argc, char** argv,string dgraph_path,string qgraph_path,stri
 
     double load_graphs_time_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
+//    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), 35);
+//    MTcalc12(data_graph,data_graph->getGraphMaxDegree(),datagraph_eigenvalue,true,35);
+//    saveData("wordnet.csv", datagraph_eigenvalue);
+
+#ifdef PRINT
     std::cout << "-----" << std::endl;
     std::cout << "Query Graph Meta Information" << std::endl;
     query_graph->printGraphMetaData();
@@ -278,18 +289,17 @@ int experiment2(int argc, char** argv,string dgraph_path,string qgraph_path,stri
     data_graph->printGraphMetaData();
 
     std::cout << "--------------------------------------------------------------------" << std::endl;
-
+#endif
     /**
      * Start queries.
      */
 
-//    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), 35);
-//    MTcalc12(data_graph,data_graph->getGraphMaxDegree(),datagraph_eigenvalue,true,35);
-//    saveData("yeast.csv", datagraph_eigenvalue);
 
+#ifdef PRINT
     std::cout << "Start queries..." << std::endl;
     std::cout << "-----" << std::endl;
     std::cout << "Filter candidates..." << std::endl;
+#endif
 
     start = std::chrono::high_resolution_clock::now();
 
@@ -330,6 +340,7 @@ int experiment2(int argc, char** argv,string dgraph_path,string qgraph_path,stri
     }
 
     // Sort the candidates to support the set intersections
+    // TODO figure out why CECI dosen't work, read the paper.
     if (input_filter_type != "CECI")
         FilterVertices::sortCandidates(candidates, candidates_count, query_graph->getVerticesCount());
 
@@ -350,8 +361,11 @@ int experiment2(int argc, char** argv,string dgraph_path,string qgraph_path,stri
                                                                                           candidates_count, optimal_candidates_count);
     FilterVertices::printCandidatesInfo(query_graph, candidates_count, optimal_candidates_count);
 #endif
+
+#ifdef PRINT
     std::cout << "-----" << std::endl;
     std::cout << "Build indices..." << std::endl;
+#endif
 
     start = std::chrono::high_resolution_clock::now();
 
@@ -361,7 +375,6 @@ int experiment2(int argc, char** argv,string dgraph_path,string qgraph_path,stri
         for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
             edge_matrix[i] = new Edges *[query_graph->getVerticesCount()];
         }
-
         BuildTable::buildTables(data_graph, query_graph, candidates, candidates_count, edge_matrix);
     }
 
@@ -371,15 +384,22 @@ int experiment2(int argc, char** argv,string dgraph_path,string qgraph_path,stri
     size_t memory_cost_in_bytes = 0;
     if (input_filter_type != "CECI") {
         memory_cost_in_bytes = BuildTable::computeMemoryCostInBytes(query_graph, candidates_count, edge_matrix);
+#ifdef PRINT
         BuildTable::printTableCardinality(query_graph, edge_matrix);
+#endif
     }
     else {
         memory_cost_in_bytes = BuildTable::computeMemoryCostInBytes(query_graph, candidates_count, ceci_order, ceci_tree,
                                                                     TE_Candidates, NTE_Candidates);
+#ifdef PRINT
         BuildTable::printTableCardinality(query_graph, ceci_tree, ceci_order, TE_Candidates, NTE_Candidates);
+#endif
     }
+
+#ifdef PRINT
     std::cout << "-----" << std::endl;
     std::cout << "Generate a matching order..." << std::endl;
+#endif
 
     start = std::chrono::high_resolution_clock::now();
 
@@ -437,14 +457,22 @@ int experiment2(int argc, char** argv,string dgraph_path,string qgraph_path,stri
 
     if (input_order_type != "Spectrum") {
         GenerateQueryPlan::checkQueryPlanCorrectness(query_graph, matching_order, pivots);
+#ifdef PRINT
         GenerateQueryPlan::printSimplifiedQueryPlan(query_graph, matching_order);
+#endif
     }
     else {
+#ifdef PRINT
         std::cout << "Generate " << spectrum.size() << " matching orders." << std::endl;
+#endif
+
     }
 
+#ifdef PRINT
     std::cout << "-----" << std::endl;
     std::cout << "Enumerate..." << std::endl;
+#endif
+
     size_t output_limit = 0;
     size_t embedding_count = 0;
     if (input_max_embedding_num == "MAX") {
@@ -469,11 +497,16 @@ int experiment2(int argc, char** argv,string dgraph_path,string qgraph_path,stri
         embedding_count = EvaluateQuery::exploreGraph(data_graph, query_graph, edge_matrix, candidates,
                                                       candidates_count, matching_order, pivots, output_limit, call_count);
     } else if (input_engine_type == "LFTJ") {
+
         enumResult s = EvaluateQuery::LFTJ(data_graph, query_graph, edge_matrix, candidates, candidates_count,
                                            matching_order, output_limit, call_count);
         embedding_count = s.embedding_cnt;
-        cout<<"Candidate vertices number: "<<candidates_set.size()<<endl;
-        cout<<"Result vertices number: " <<s.results.size()<< endl;
+
+        *candidate_vertices = candidates_set.size();
+        *result_vertices = s.results.size();
+//        cout<<"Candidate vertices number(unique vertex): "<<candidates_set.size()<<endl;
+//        cout<<"Result vertices number(unique vertex): " <<s.results.size()<< endl;
+
     } else if (input_engine_type == "GQL") {
         embedding_count = EvaluateQuery::exploreGraphQLStyle(data_graph, query_graph, candidates, candidates_count,
                                                              matching_order, output_limit, call_count);
@@ -579,16 +612,40 @@ int experiment2(int argc, char** argv,string dgraph_path,string qgraph_path,stri
 }
 
 
+void experiment2(string data_graph,string query_graph,string eigen,string top_s){
+    // -d ../../test/reallife_dataset/wordnet/data_graph/wordnet.graph -q ../../test/reallife_dataset/wordnet/query_graph/query_dense_12_2.graph -filter GQL -order GQL -engine LFTJ -num MAX -eigen 1 -tops 10
+    //TODO Missing CECI
+    string filters[6] = {"LDF","NLF","GQL","TSO","CFL","DPiso"};
+
+    int results[7];
+    int counter = 0;
+
+    for(int i = 0; i<6;i++){
+        int* candidate_vertices = new int;
+        int* result_vertices = new int;
+        solveGraphQuery(data_graph, query_graph, filters[i], "GQL", "LFTJ", eigen, top_s,
+                        candidate_vertices, result_vertices);
+        if(counter == 0){
+            results[counter]= *result_vertices;
+            counter++;
+        }
+        results[counter]= *candidate_vertices;
+        counter++;
+
+        delete candidate_vertices;
+        delete result_vertices;
+    }
+    for(int i=0; i<7;i++){
+        cout<<results[i]<<",";
+    }
+}
+
+
 int main(int argc, char** argv) {
-   // -d ../../test/reallife_dataset/wordnet/data_graph/wordnet.graph -q ../../test/reallife_dataset/wordnet/query_graph/query_dense_12_2.graph -filter GQL -order GQL -engine LFTJ -num MAX -eigen 1 -tops 10
     string data_graph = "../../test/reallife_dataset/wordnet/data_graph/wordnet.graph";
-    string query_graph = "../../test/reallife_dataset/wordnet/query_graph/query_dense_12_2.graph";
-    string filter = "GQL";
-    string order = "GQL";
-    string engine = "LFTJ";
-    string eigen = "1";
-    string top_s = "10";
-    ui* candidate_unique = NULL;
-    ui* result_unique = NULL;
-    experiment2(argc,argv,data_graph,query_graph,filter,order,engine,eigen,top_s,candidate_unique,result_unique);
+    string query_graph = "../../test/reallife_dataset/wordnet/query_graph/query_dense_16_2.graph";
+    cout<<"with EF"<<endl;
+    experiment2(data_graph,query_graph,"1","10");
+    cout<<"no EF"<<endl;
+    experiment2(data_graph,query_graph,"0","10");
 }

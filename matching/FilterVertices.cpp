@@ -55,10 +55,7 @@ FilterVertices::LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
         allocateBuffer(data_graph, query_graph, candidates, candidates_count);
         MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
         MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
-
-        MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
-//        MTcalc12(data_graph,data_graph->getGraphMaxDegree(),datagraph_eigenvalue,true,top_s);
-//        saveData("yeast.csv", datagraph_eigenvalue);
+        MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), 35);
         datagraph_eigenvalue = openData(datagraphEigenMatrix);
 
         for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
@@ -74,8 +71,13 @@ FilterVertices::LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
                     // Top Eigenvalue check
                     bool top_s_check = true;
                     for (ui e=0; e<top_s; e++){
-                        if (datagraph_eigenvalue.row(data_vertex)[e] < querygraph_eigenvalue.row(i)[e]){
+                        if ( datagraph_eigenvalue.row(data_vertex)[e] > querygraph_eigenvalue.row(i)[e]
+                        || abs(datagraph_eigenvalue.row(data_vertex)[e] - querygraph_eigenvalue.row(i)[e])<0.001){
+                            top_s_check = true;
+                        }
+                        else{
                             top_s_check = false;
+                            break;
                         }
                     }
                     if(top_s_check){
@@ -891,8 +893,13 @@ FilterVertices::computeCandidateWithNLF(Graph *data_graph, Graph *query_graph, V
                     if (isEigenCheck){
                         bool top_s_check = true;
                         for (ui e=0; e<top_s; e++){
-                            if (datagraph_eigen.row(data_vertex)[e] < querygraph_eigen.row(query_vertex)[e]){
+                            if (datagraph_eigen.row(data_vertex)[e] > querygraph_eigen.row(query_vertex)[e]
+                            || abs(datagraph_eigen.row(data_vertex)[e] - querygraph_eigen.row(query_vertex)[e]) < 0.001){
+                                top_s_check = true;
+                            }
+                            else{
                                 top_s_check = false;
+                                break;
                             }
                         }
                         if(top_s_check){
