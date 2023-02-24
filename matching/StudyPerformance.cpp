@@ -13,6 +13,9 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <time.h>
+
+
 
 #include "matchingcommand.h"
 #include "graph/graph.h"
@@ -36,9 +39,13 @@ size_t enumerate(Graph* data_graph, Graph* query_graph, Edges*** edge_matrix, ui
     order_id += 1;
 
     auto start = std::chrono::high_resolution_clock::now();
+
+
+
     size_t call_count = 0;
     size_t embedding_count = EvaluateQuery::LFTJ(data_graph, query_graph, edge_matrix, candidates, candidates_count,
                                matching_order, output_limit, call_count).embedding_cnt;
+
 
     auto end = std::chrono::high_resolution_clock::now();
     double enumeration_time_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
@@ -54,6 +61,7 @@ size_t enumerate(Graph* data_graph, Graph* query_graph, Edges*** edge_matrix, ui
     printf("Spectrum Order %u #Embeddings: %zu\n", order_id, embedding_count);
     printf("Spectrum Order %u Call Count: %zu\n", order_id, call_count);
     printf("Spectrum Order %u Per Call Count Time (nanoseconds): %.4lf\n", order_id, enumeration_time_in_ns / (call_count == 0 ? 1 : call_count));
+
 
     return embedding_count;
 }
@@ -211,7 +219,7 @@ string experiment(Graph *data_graph, Graph *query_graph){
 //}
 
 int solveGraphQuery(string dgraph_path, string qgraph_path, string filter, string order, string engine,
-                    string eigen, string tops, int* candidate_vertices, int* result_vertices){
+                    string eigen, string tops, int* candidate_vertices, int* result_vertices,int* embedding_cnt){
     int argc = 0;
     char** argv;
     MatchingCommand command(argc, argv);
@@ -279,7 +287,7 @@ int solveGraphQuery(string dgraph_path, string qgraph_path, string filter, strin
 
 //    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), 35);
 //    MTcalc12(data_graph,data_graph->getGraphMaxDegree(),datagraph_eigenvalue,true,35);
-//    saveData("wordnet.csv", datagraph_eigenvalue);
+//    saveData("dblp.csv", datagraph_eigenvalue);
 
 #ifdef PRINT
     std::cout << "-----" << std::endl;
@@ -347,12 +355,6 @@ int solveGraphQuery(string dgraph_path, string qgraph_path, string filter, strin
     end = std::chrono::high_resolution_clock::now();
     double filter_vertices_time_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
-    std::set <ui> candidates_set;
-    for (int i = 0; i<query_graph->getVerticesCount();i++){
-        for (int j = 0; j<*(candidates_count+i);j++){
-            candidates_set.insert(*(*(candidates+i)+j));
-        }
-    }
 
     // Compute the candidates false positive ratio.
 #ifdef OPTIMAL_CANDIDATES
@@ -498,14 +500,21 @@ int solveGraphQuery(string dgraph_path, string qgraph_path, string filter, strin
                                                       candidates_count, matching_order, pivots, output_limit, call_count);
     } else if (input_engine_type == "LFTJ") {
 
+
         enumResult s = EvaluateQuery::LFTJ(data_graph, query_graph, edge_matrix, candidates, candidates_count,
                                            matching_order, output_limit, call_count);
-        embedding_count = s.embedding_cnt;
 
-        *candidate_vertices = candidates_set.size();
-        *result_vertices = s.results.size();
-//        cout<<"Candidate vertices number(unique vertex): "<<candidates_set.size()<<endl;
-//        cout<<"Result vertices number(unique vertex): " <<s.results.size()<< endl;
+
+
+        // For each candidate, count it as true candidate(result_counter++) if it exits in one of the final match.
+        int result_counter = 0;
+
+        int sum = 0;
+
+        *candidate_vertices = accumulate(candidates_count,candidates_count+query_graph->getVerticesCount(),sum);
+        *result_vertices = s.true_cand_sum;
+        *embedding_cnt = s.embedding_cnt;
+
 
     } else if (input_engine_type == "GQL") {
         embedding_count = EvaluateQuery::exploreGraphQLStyle(data_graph, query_graph, candidates, candidates_count,
@@ -613,39 +622,67 @@ int solveGraphQuery(string dgraph_path, string qgraph_path, string filter, strin
 
 
 void experiment2(string data_graph,string query_graph,string eigen,string top_s){
+    //In this experiment I find out what are the vertices in the candidate set has been embedded into valid matches.
+
     // -d ../../test/reallife_dataset/wordnet/data_graph/wordnet.graph -q ../../test/reallife_dataset/wordnet/query_graph/query_dense_12_2.graph -filter GQL -order GQL -engine LFTJ -num MAX -eigen 1 -tops 10
     //TODO Missing CECI
     string filters[6] = {"LDF","NLF","GQL","TSO","CFL","DPiso"};
 
-    int results[7];
-    int counter = 0;
+    int candidate_counts[6];
+    int results[6];
+    int embeddings[6];
+
 
     for(int i = 0; i<6;i++){
-        int* candidate_vertices = new int;
-        int* result_vertices = new int;
+        cout<<i<<endl;
+        int* candidate_count = new int;
+        int* candidate_true = new int;
+        int* embedding_cnt = new int;
         solveGraphQuery(data_graph, query_graph, filters[i], "GQL", "LFTJ", eigen, top_s,
-                        candidate_vertices, result_vertices);
-        if(counter == 0){
-            results[counter]= *result_vertices;
-            counter++;
-        }
-        results[counter]= *candidate_vertices;
-        counter++;
+                        candidate_count, candidate_true,embedding_cnt);
+        candidate_counts[i] = *candidate_count;
+        results[i]= *candidate_true;
+        embeddings[i] = *embedding_cnt;
 
-        delete candidate_vertices;
-        delete result_vertices;
+        delete candidate_count;
+        delete candidate_true;
+
     }
-    for(int i=0; i<7;i++){
+
+    cout<<"--------------------------"<<endl;
+    cout<<"Candidates"<<endl;
+    for(int i=0; i<6;i++){
+        cout<<candidate_counts[i]<<",";
+    }
+    cout<<" "<<endl;
+    cout<<"Candidates_true"<<endl;
+    for(int i=0; i<6;i++){
         cout<<results[i]<<",";
     }
+    cout<<" "<<endl;
+    cout<<"Embedding count"<<endl;
+    for(int i=0; i<6;i++){
+        cout<<embeddings[i]<<",";
+    }
+    cout<<" "<<endl;
+    cout<<"--------------------------"<<endl;
 }
 
 
 int main(int argc, char** argv) {
-    string data_graph = "../../test/reallife_dataset/wordnet/data_graph/wordnet.graph";
-    string query_graph = "../../test/reallife_dataset/wordnet/query_graph/query_dense_16_2.graph";
+    string data_graph_path = "../../test/reallife_dataset/dblp/data_graph/dblp.graph";
+    string query_graph_path = "../../test/reallife_dataset/dblp/query_graph/query_dense_8_6.graph";
+
+
+    Graph* data_graph = new Graph(true);
+    data_graph->loadGraphFromFile(data_graph_path);
+
+    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), 35);
+    MTcalc12(data_graph,data_graph->getGraphMaxDegree(),datagraph_eigenvalue,true,35);
+    saveData("dblp.csv", datagraph_eigenvalue);
+
     cout<<"with EF"<<endl;
-    experiment2(data_graph,query_graph,"1","10");
+    experiment2(data_graph_path,query_graph_path,"1","8");
     cout<<"no EF"<<endl;
-    experiment2(data_graph,query_graph,"0","10");
+    experiment2(data_graph_path,query_graph_path,"0","8");
 }

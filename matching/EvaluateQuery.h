@@ -31,6 +31,7 @@ typedef std::priority_queue<std::pair<std::pair<VertexID, ui>, ui>, std::vector<
 struct enumResult {
     size_t embedding_cnt;
     set<ui> results;
+    int true_cand_sum;
 };
 
 class EvaluateQuery {

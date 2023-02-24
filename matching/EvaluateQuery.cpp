@@ -267,6 +267,7 @@ EvaluateQuery::LFTJ(const Graph *data_graph, const Graph *query_graph, Edges ***
 #endif
 
     enumResult s;
+    set<ui> true_sets[query_graph->getVerticesCount()];
 
     // Generate bn.
     ui **bn;
@@ -339,11 +340,17 @@ EvaluateQuery::LFTJ(const Graph *data_graph, const Graph *query_graph, Edges ***
 #endif
 
             if (cur_depth == max_depth - 1) {
+                embedding_cnt += 1;
+                visited_vertices[v] = false;
+
                 for (int i = 0; i<max_depth;i++){
                     s.results.insert(embedding[i]);
                 }
-                embedding_cnt += 1;
-                visited_vertices[v] = false;
+
+                for (int i =0; i<max_depth;i++){
+                    true_sets[order[i]].insert(embedding[i]);
+                }
+
 
 #ifdef DISTRIBUTION
                 distribution_count_[v] += 1;
@@ -438,7 +445,14 @@ EvaluateQuery::LFTJ(const Graph *data_graph, const Graph *query_graph, Edges ***
     }
     delete[] qfliter_bsr_graph_;
 #endif
+    int true_cand_sum = 0;
+
+    for (int i=0; i<query_graph->getVerticesCount();i++){
+        true_cand_sum += true_sets[i].size();
+    }
+
     s.embedding_cnt = embedding_cnt;
+    s.true_cand_sum = true_cand_sum;
     return s;
 }
 

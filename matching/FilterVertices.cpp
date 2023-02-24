@@ -17,7 +17,7 @@
 #define INVALID_VERTEX_ID 100000000
 using namespace Eigen;
 
-string FilterVertices::datagraphEigenMatrix = "wordnet.csv";
+string FilterVertices::datagraphEigenMatrix = "yeast.csv";
 
 bool
 FilterVertices::EFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,int top_s){
