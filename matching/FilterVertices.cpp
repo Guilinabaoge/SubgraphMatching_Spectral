@@ -13,11 +13,10 @@
 #include <Eigen/SparseCore>
 #include "eigenHelper.h"
 #include "IO.h"
+#include "Experiments.h"
 
 #define INVALID_VERTEX_ID 100000000
 using namespace Eigen;
-
-string FilterVertices::datagraphEigenMatrix = "yeast.csv";
 
 bool
 FilterVertices::EFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,int top_s){
@@ -26,7 +25,7 @@ FilterVertices::EFilter(Graph *data_graph, Graph *query_graph, ui **&candidates,
     MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
     MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
     MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
-    datagraph_eigenvalue = openData(datagraphEigenMatrix);
+    datagraph_eigenvalue = openData(Experiments::datagraphEigenMatrix);
 
     for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
         for (ui j = 0; j < data_graph->getVerticesCount(); ++j) {
@@ -56,7 +55,7 @@ FilterVertices::LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
         MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
         MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
         MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), 35);
-        datagraph_eigenvalue = openData(datagraphEigenMatrix);
+        datagraph_eigenvalue = openData(Experiments::datagraphEigenMatrix);
 
         for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
             LabelID label = query_graph->getVertexLabel(i);
@@ -123,7 +122,7 @@ FilterVertices::NLFFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
     MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
     MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
     MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
-    datagraph_eigenvalue = openData(datagraphEigenMatrix);
+    datagraph_eigenvalue = openData(Experiments::datagraphEigenMatrix);
 
     for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
         VertexID query_vertex = i;
@@ -225,7 +224,7 @@ FilterVertices::TSOFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
     MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
     MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
     MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
-    datagraph_eigenvalue = openData(datagraphEigenMatrix);
+    datagraph_eigenvalue = openData(Experiments::datagraphEigenMatrix);
 
     // Get the candidates of the start vertex.
     VertexID start_vertex = order[0];
@@ -268,7 +267,7 @@ FilterVertices::CFLFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
     MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
     MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
     MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
-    datagraph_eigenvalue = openData(datagraphEigenMatrix);
+    datagraph_eigenvalue = openData(Experiments::datagraphEigenMatrix);
 
     VertexID start_vertex = order[0];
     computeCandidateWithNLF(data_graph, query_graph, start_vertex, candidates_count[start_vertex], candidates[start_vertex],datagraph_eigenvalue,
@@ -370,7 +369,7 @@ FilterVertices::CECIFilter(Graph *data_graph, Graph *query_graph, ui **&candidat
     MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
     MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
     MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
-    datagraph_eigenvalue = openData(datagraphEigenMatrix);
+    datagraph_eigenvalue = openData(Experiments::datagraphEigenMatrix);
 
     // Find the pivots.
     VertexID root = order[0];

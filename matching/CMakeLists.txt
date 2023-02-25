@@ -1,4 +1,6 @@
 set(SUBGRAPH_MATCHING_FILE_LIST
+        Experiments.cpp
+        Experiments.h
         IO.cpp
         IO.h
         eigenHelper.cpp
@@ -15,7 +17,9 @@ set(SUBGRAPH_MATCHING_FILE_LIST
         EvaluateQuery.h
         GenerateFilteringPlan.cpp
         GenerateFilteringPlan.h
-        StudyPerformance.cpp)
+        StudyPerformance.cpp
+        StudyPerformance.h
+        main.cpp)
 
 set(GRAPH_CONVERTER_FILE_LIST
         GraphConverter.cpp)

@@ -6,6 +6,7 @@
 #include "FilterVertices.h"
 #include "eigenHelper.h"
 #include "IO.h"
+#include "Experiments.h"
 #include <Eigen/Core>
 #include <queue>
 #include <utility/graphoperations.h>
@@ -171,7 +172,7 @@ VertexID GenerateFilteringPlan::selectTSOFilterStartVertex(Graph *data_graph, Gr
     MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
     MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
     MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
-    datagraph_eigenvalue = openData(FilterVertices::datagraphEigenMatrix);
+    datagraph_eigenvalue = openData(Experiments::datagraphEigenMatrix);
 
     // Pick the one with the smallest number of candidates.
     VertexID start_vertex = 0;
@@ -237,7 +238,7 @@ VertexID GenerateFilteringPlan::selectCFLFilterStartVertex(Graph *data_graph, Gr
     MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
     MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
     MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
-    datagraph_eigenvalue = openData(FilterVertices::datagraphEigenMatrix);
+    datagraph_eigenvalue = openData(Experiments::datagraphEigenMatrix);
 
     while (!rank_queue.empty()) {
         VertexID query_vertex = rank_queue.top().first;
