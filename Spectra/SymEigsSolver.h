@@ -76,7 +76,7 @@ namespace Spectra {
 ///     eigs.init();
 ///     int nconv = eigs.compute(SortRule::LargestAlge);
 ///
-///     // Retrieve results
+///     // Retrieve candidate_true
 ///     Eigen::VectorXd evalues;
 ///     if (eigs.info() == CompInfo::Successful)
 ///         evalues = eigs.eigenvalues();

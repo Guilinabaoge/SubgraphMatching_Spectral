@@ -6,7 +6,7 @@ GraphQL, CFL, CECI, DP-iso, RI and VF2++ in a common
 framework to compare them on the following four aspects:
 (1) method of filtering candidate vertices in the data graph;
 (2) method of ordering query vertices; (3) method of enumer-
-ating partial results; and (4) other optimization techniques.
+ating partial candidate_true; and (4) other optimization techniques.
 Then, we compare the overall performance of these algo-
 rithms with Glasgow, an algorithm based on the constraint
 programming. Through experiments, we find that (1) the fil-
@@ -17,7 +17,7 @@ most effective; (3) the set intersection based local candidate
 computation in CECI and DP-iso performs the best in the
 enumeration; and (4) the failing sets pruning in DP-iso can
 significantly improve the performance when queries become
-large. Based on these new results, we recommend users to
+large. Based on these new candidate_true, we recommend users to
 adopt specific techniques depending on the data graph den-
 sity and query size.
 
@@ -57,11 +57,11 @@ Execute the binary with the following command ./SubgraphMatching.out -d data_gra
 in which -d specifies the input of the data graphs and -q specifies the input of the query graphs.
 The -filter parameter gives the filtering method, the -order specifies the ordering method, and the -engine
 sets the enumeration method. The -num parameter sets the maximum number of embeddings that you would like to find.
-If the number of embeddings enumerated reaches the limit or all the results have been found, then the program will terminate.
-Set -num as 'MAX' to find all results.
+If the number of embeddings enumerated reaches the limit or all the candidate_true have been found, then the program will terminate.
+Set -num as 'MAX' to find all candidate_true.
 
 Example (Use the filtering and ordering methods of GraphQL to generate the candidate vertex sets and the matching order respectively.
-Enumerate results with the set-intersection based local candidate computation method):
+Enumerate candidate_true with the set-intersection based local candidate computation method):
 
 
 ```zsh
@@ -120,7 +120,7 @@ The ordering methods that generate matching order.
 |RI| the ordering method of RI |
 |VF2++| the ordering method of VF2++ |
 
-The enumeration methods that find all results.
+The enumeration methods that find all candidate_true.
 
 |Parameter of Command Line (-engine) | Description |
 | :-----------------------------------: | :-------------: |
@@ -140,7 +140,7 @@ For example, we evaluate the query with the GraphQL algorithm in the following c
 
 Apart from evaluating queries with a specific algorithm, we can also execute queries by integrating techniques from
 different algorithms. For example, we generate the candidates with the label and degree filter, obtain the matching order
-with the ordering method of CFL, and finally enumerate the results with the set-intersection based local candidates
+with the ordering method of CFL, and finally enumerate the candidate_true with the set-intersection based local candidates
 computation method. Note that the source code cannot support the filtering/ordering/enumeration orders of CECI to integrate with
 other algorithms.
 
@@ -179,7 +179,7 @@ For the large queries, we recommend you to enable the failing set pruning.
 For the dense data graphs, we recommend you to enable QFilter. Otherwise, use the hybrid set intersection method with AVX2.
 
 In summary, you can execute your workloads with the following parameters as your baseline method in your experiments. First, add the definition "#define ENABLE_FAILING_SET" in 
-configuration/config.h. Second, re-compile the source code. Finally, execute the workloads. **Note that in our experiments, we set the target number of results as 100000 and terminate a query if it cannot be completed within 5 minutes (300 seconds). You can adjust these settings according to your requirement.**
+configuration/config.h. Second, re-compile the source code. Finally, execute the workloads. **Note that in our experiments, we set the target number of candidate_true as 100000 and terminate a query if it cannot be completed within 5 minutes (300 seconds). You can adjust these settings according to your requirement.**
 
 Execute the program with the "RI":
 

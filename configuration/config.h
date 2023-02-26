@@ -48,7 +48,7 @@
 // #define ENABLE_FAILING_SET
 
 /**
- * Enable collection the distribution of the results in the data graph.
+ * Enable collection the distribution of the candidate_true in the data graph.
  */
 
 // #define DISTRIBUTION

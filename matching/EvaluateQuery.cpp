@@ -267,7 +267,10 @@ EvaluateQuery::LFTJ(const Graph *data_graph, const Graph *query_graph, Edges ***
 #endif
 
     enumResult s;
-    set<ui> true_sets[query_graph->getVerticesCount()];
+
+    for (int i=0; i<query_graph->getVerticesCount();i++){
+        s.candidate_true.push_back(set<ui>());
+    }
 
     // Generate bn.
     ui **bn;
@@ -343,12 +346,9 @@ EvaluateQuery::LFTJ(const Graph *data_graph, const Graph *query_graph, Edges ***
                 embedding_cnt += 1;
                 visited_vertices[v] = false;
 
+                //TODO do we consider the order here?
                 for (int i = 0; i<max_depth;i++){
-                    s.results.insert(embedding[i]);
-                }
-
-                for (int i =0; i<max_depth;i++){
-                    true_sets[order[i]].insert(embedding[i]);
+                    s.candidate_true[i].insert(embedding[i]);
                 }
 
 
@@ -361,6 +361,7 @@ EvaluateQuery::LFTJ(const Graph *data_graph, const Graph *query_graph, Edges ***
                 vec_failing_set[cur_depth].set();
                 vec_failing_set[cur_depth - 1] |= vec_failing_set[cur_depth];
 #endif
+//                cout<<embedding_cnt<<endl;
                 if (embedding_cnt >= output_limit_num) {
                     goto EXIT;
                 }
@@ -448,11 +449,11 @@ EvaluateQuery::LFTJ(const Graph *data_graph, const Graph *query_graph, Edges ***
     int true_cand_sum = 0;
 
     for (int i=0; i<query_graph->getVerticesCount();i++){
-        true_cand_sum += true_sets[i].size();
+        true_cand_sum += s.candidate_true[i].size();
     }
 
     s.embedding_cnt = embedding_cnt;
-    s.true_cand_sum = true_cand_sum;
+    s.candidate_true_count_sum = true_cand_sum;
     return s;
 }
 
@@ -583,13 +584,19 @@ void EvaluateQuery::generateValidCandidateIndex(ui depth, ui *idx_embedding, ui 
 #endif
 }
 
-size_t EvaluateQuery::exploreGraphQLStyle(const Graph *data_graph, const Graph *query_graph, ui **candidates,
+enumResult EvaluateQuery::exploreGraphQLStyle(const Graph *data_graph, const Graph *query_graph, ui **candidates,
                                           ui *candidates_count, ui *order,
                                           size_t output_limit_num, size_t &call_count) {
     size_t embedding_cnt = 0;
     int cur_depth = 0;
     int max_depth = query_graph->getVerticesCount();
     VertexID start_vertex = order[0];
+
+    enumResult s;
+    set<ui> true_sets[query_graph->getVerticesCount()];
+    for (int i=0; i<query_graph->getVerticesCount();i++){
+        s.candidate_true.push_back(set<ui>());
+    }
 
     // Generate the bn.
     ui **bn;
@@ -657,6 +664,15 @@ size_t EvaluateQuery::exploreGraphQLStyle(const Graph *data_graph, const Graph *
             if (cur_depth == max_depth - 1) {
                 embedding_cnt += 1;
                 visited_vertices[v] = false;
+
+                for (int i = 0; i<max_depth;i++){
+                    s.candidate_true[order[i]].insert(embedding[i]);
+                }
+
+                for (int i =0; i<max_depth;i++){
+                    true_sets[order[i]].insert(embedding[i]);
+                }
+
                 if (embedding_cnt >= output_limit_num) {
                     goto EXIT;
                 }
@@ -691,7 +707,16 @@ size_t EvaluateQuery::exploreGraphQLStyle(const Graph *data_graph, const Graph *
     delete[] bn;
     delete[] valid_candidate;
 
-    return embedding_cnt;
+    int true_cand_sum = 0;
+
+    for (int i=0; i<query_graph->getVerticesCount();i++){
+        true_cand_sum += true_sets[i].size();
+    }
+
+    s.embedding_cnt = embedding_cnt;
+    s.candidate_true_count_sum = true_cand_sum;
+
+    return s;
 }
 
 void EvaluateQuery::generateValidCandidates(const Graph *data_graph, ui depth, ui *embedding, ui *idx_count,

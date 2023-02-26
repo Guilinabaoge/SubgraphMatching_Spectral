@@ -197,7 +197,7 @@ private:
 
 protected:
     // Sorts the first nev Ritz pairs in the specified order
-    // This is used to return the final results
+    // This is used to return the final candidate_true
     virtual void sort_ritzpair(SortRule sort_rule)
     {
         if ((sort_rule != SortRule::LargestAlge) && (sort_rule != SortRule::LargestMagn) &&
@@ -352,7 +352,7 @@ public:
             nev_adj = nev_adjusted(nconv);
             restart(nev_adj, selection);
         }
-        // Sorting results
+        // Sorting candidate_true
         sort_ritzpair(sorting);
 
         m_niter += i + 1;

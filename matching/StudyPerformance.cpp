@@ -31,6 +31,7 @@
 
 #define NANOSECTOSEC(elapsed_time) ((elapsed_time)/(double)1000000000)
 #define BYTESTOMB(memory_cost) ((memory_cost)/(double)(1024 * 1024))
+//#define PRINT;
 
 size_t StudyPerformance::enumerate(Graph* data_graph, Graph* query_graph, Edges*** edge_matrix, ui** candidates, ui* candidates_count,
                 ui* matching_order, size_t output_limit) {
@@ -96,23 +97,23 @@ void StudyPerformance::spectrum_analysis(Graph* data_graph, Graph* query_graph, 
 }
 
 
-int StudyPerformance::solveGraphQuery(string dgraph_path, string qgraph_path, string filter, string order, string engine,
-                    string eigen, string tops, int* candidate_vertices, int* result_vertices,int* embedding_cnt){
+matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inputs){
     int argc = 0;
     char** argv;
     MatchingCommand command(argc, argv);
-    std::string input_query_graph_file = qgraph_path;
-    std::string input_data_graph_file = dgraph_path;
-    std::string input_filter_type = filter;
-    std::string input_order_type = order;
-    std::string input_engine_type = engine;
-    std::string input_max_embedding_num = "MAX";
+    std::string input_query_graph_file = inputs.qgraph_path;
+    std::string input_data_graph_file = inputs.dgraph_path;
+    std::string input_filter_type = inputs.filter;
+    std::string input_order_type = inputs.order;
+    std::string input_engine_type = inputs.engine;
+    std::string input_max_embedding_num = "3000000";
     std::string input_time_limit = command.getTimeLimit();
     std::string input_order_num = command.getOrderNum();
     std::string input_distribution_file_path = command.getDistributionFilePath();
     std::string input_csr_file_path = command.getCSRFilePath();
-    std::string input_iseigen = eigen;
-    std::string input_tops = tops;
+    std::string input_iseigen = inputs.eigen;
+    std::string input_tops;
+    matching_algo_outputs outputs;
     /**
      * Output the command line information.
      */
@@ -146,6 +147,7 @@ int StudyPerformance::solveGraphQuery(string dgraph_path, string qgraph_path, st
     Graph* query_graph = new Graph(true);
     query_graph->loadGraphFromFile(input_query_graph_file);
     query_graph->buildCoreTable();
+    outputs.query_size = query_graph->getVerticesCount();
 
     Graph* data_graph = new Graph(true);
 
@@ -163,9 +165,11 @@ int StudyPerformance::solveGraphQuery(string dgraph_path, string qgraph_path, st
 
     double load_graphs_time_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
-//    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), 35);
-//    MTcalc12(data_graph,data_graph->getGraphMaxDegree(),datagraph_eigenvalue,true,35);
-//    saveData("dblp.csv", datagraph_eigenvalue);
+
+    input_tops = "10";
+    if(query_graph->getVerticesCount()==4) input_tops = "4";
+    if(query_graph->getVerticesCount()==8) input_tops = "8";
+
 
 #ifdef PRINT
     std::cout << "-----" << std::endl;
@@ -226,12 +230,23 @@ int StudyPerformance::solveGraphQuery(string dgraph_path, string qgraph_path, st
     }
 
     // Sort the candidates to support the set intersections
-    // TODO figure out why CECI dosen't work, read the paper.
+    // TODO figure out why CECI doesn't work, read the paper.
     if (input_filter_type != "CECI")
         FilterVertices::sortCandidates(candidates, candidates_count, query_graph->getVerticesCount());
 
     end = std::chrono::high_resolution_clock::now();
     double filter_vertices_time_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+
+
+    for (int i=0; i<query_graph->getVerticesCount();i++){
+        outputs.candidate.push_back(set<ui>());
+    }
+
+    for (int i=0; i<query_graph->getVerticesCount();i++){
+        for(int j=0;j<candidates_count[i];j++){
+            outputs.candidate[i].insert(candidates[i][j]);
+        }
+    }
 
 
     // Compute the candidates false positive ratio.
@@ -372,6 +387,7 @@ int StudyPerformance::solveGraphQuery(string dgraph_path, string qgraph_path, st
     sscanf(input_time_limit.c_str(), "%zu", &time_limit);
 
     start = std::chrono::high_resolution_clock::now();
+    enumResult s;
 
     if (input_engine_type == "EXPLORE") {
         embedding_count = EvaluateQuery::exploreGraph(data_graph, query_graph, edge_matrix, candidates,
@@ -379,24 +395,17 @@ int StudyPerformance::solveGraphQuery(string dgraph_path, string qgraph_path, st
     } else if (input_engine_type == "LFTJ") {
 
 
-        enumResult s = EvaluateQuery::LFTJ(data_graph, query_graph, edge_matrix, candidates, candidates_count,
+        s = EvaluateQuery::LFTJ(data_graph, query_graph, edge_matrix, candidates, candidates_count,
                                            matching_order, output_limit, call_count);
-
-
-
-        // For each candidate, count it as true candidate(result_counter++) if it exits in one of the final match.
-        int result_counter = 0;
-
-        int sum = 0;
-
-        *candidate_vertices = accumulate(candidates_count,candidates_count+query_graph->getVerticesCount(),sum);
-        *result_vertices = s.true_cand_sum;
-        *embedding_cnt = s.embedding_cnt;
+        embedding_count = s.embedding_cnt;
 
 
     } else if (input_engine_type == "GQL") {
-        embedding_count = EvaluateQuery::exploreGraphQLStyle(data_graph, query_graph, candidates, candidates_count,
+        s = EvaluateQuery::exploreGraphQLStyle(data_graph, query_graph, candidates, candidates_count,
                                                              matching_order, output_limit, call_count);
+
+        embedding_count = s.embedding_cnt;
+
     } else if (input_engine_type == "QSI") {
         embedding_count = EvaluateQuery::exploreQuickSIStyle(data_graph, query_graph, candidates, candidates_count,
                                                              matching_order, pivots, output_limit, call_count);
@@ -425,6 +434,11 @@ int StudyPerformance::solveGraphQuery(string dgraph_path, string qgraph_path, st
 
     end = std::chrono::high_resolution_clock::now();
     double enumeration_time_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+
+    int sum = 0;
+    outputs.candidate_count_sum = accumulate(candidates_count, candidates_count + query_graph->getVerticesCount(), sum);
+    outputs.enumOutput = s;
+
 
 #ifdef DISTRIBUTION
     std::ofstream outfile (input_distribution_file_path , std::ofstream::binary);
@@ -477,11 +491,12 @@ int StudyPerformance::solveGraphQuery(string dgraph_path, string qgraph_path, st
     /**
      * End.
      */
-#ifdef PRINT
-    std::cout << "--------------------------------------------------------------------" << std::endl;
+
     double preprocessing_time_in_ns = filter_vertices_time_in_ns + build_table_time_in_ns + generate_query_plan_time_in_ns;
     double total_time_in_ns = preprocessing_time_in_ns + enumeration_time_in_ns;
-
+    outputs.total_time = NANOSECTOSEC(total_time_in_ns);
+#ifdef PRINT
+    std::cout << "--------------------------------------------------------------------" << std::endl;
     printf("Load graphs time (seconds): %.4lf\n", NANOSECTOSEC(load_graphs_time_in_ns));
     printf("Filter vertices time (seconds): %.4lf\n", NANOSECTOSEC(filter_vertices_time_in_ns));
     printf("Build table time (seconds): %.4lf\n", NANOSECTOSEC(build_table_time_in_ns));
@@ -495,7 +510,7 @@ int StudyPerformance::solveGraphQuery(string dgraph_path, string qgraph_path, st
     printf("Per Call Count Time (nanoseconds): %.4lf\n", enumeration_time_in_ns / (call_count == 0 ? 1 : call_count));
     std::cout << "End." << std::endl;
 #endif
-    return 0;
+    return outputs;
 }
 
 

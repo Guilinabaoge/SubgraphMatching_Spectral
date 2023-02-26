@@ -10,8 +10,9 @@
 #include <iostream>
 #include <numeric>
 
-string Experiments::datagraphEigenMatrix = "yeast.csv";
+string Experiments::datagraphEigenMatrix;
 
+// This experiment computes the candidate number for each filters with and without EF.
 string Experiments::experiment1(Graph *data_graph, Graph *query_graph){
     ui** candidates = NULL;
     ui* candidates_count = NULL;
@@ -37,12 +38,11 @@ string Experiments::experiment1(Graph *data_graph, Graph *query_graph){
 
     int sum=0;
     int top_s = 10;
-    if(query_graph->getVerticesCount()==4){
-        top_s = 4;
-    }
-    if(query_graph->getVerticesCount()==8){
-        top_s = 8;
-    }
+    if(query_graph->getVerticesCount()==4) top_s = 4;
+    if(query_graph->getVerticesCount()==8) top_s = 8;
+
+    cout<<"top_s: "<< top_s<<endl;
+
 
     static int results[14];
     int counter = 0;
@@ -67,8 +67,9 @@ string Experiments::experiment1(Graph *data_graph, Graph *query_graph){
 }
 
 
-void Experiments::experiment2(string data_graph,string query_graph,string eigen,string top_s){
-    //In this experiment I find out the ground truth and the candidate for each vertex.
+//This experiment computes candidates for each filter and check if it will generate correct ground truth.
+void Experiments::experiment2(string data_graph_path,string query_graph_path,string eigen){
+
 
     // -d ../../test/reallife_dataset/wordnet/data_graph/wordnet.graph -q ../../test/reallife_dataset/wordnet/query_graph/query_dense_12_2.graph -filter GQL -order GQL -engine LFTJ -num MAX -eigen 1 -tops 10
     //TODO Missing CECI
@@ -80,18 +81,17 @@ void Experiments::experiment2(string data_graph,string query_graph,string eigen,
 
 
     for(int i = 0; i<6;i++){
-        cout<<i<<endl;
-        int* candidate_count = new int;
-        int* candidate_true = new int;
-        int* embedding_cnt = new int;
-        StudyPerformance::solveGraphQuery(data_graph, query_graph, filters[i], "GQL", "LFTJ", eigen, top_s,
-                        candidate_count, candidate_true,embedding_cnt);
-        candidate_counts[i] = *candidate_count;
-        results[i]= *candidate_true;
-        embeddings[i] = *embedding_cnt;
-
-        delete candidate_count;
-        delete candidate_true;
+        matching_algo_inputs inputs;
+        inputs.dgraph_path = data_graph_path;
+        inputs.qgraph_path = query_graph_path;
+        inputs.filter = filters[2];
+        inputs.order = "GQL";
+        inputs.engine = "LFTJ";
+        inputs.eigen = eigen;
+        matching_algo_outputs outputs = StudyPerformance::solveGraphQuery(inputs);
+        candidate_counts[i] = outputs.candidate_count_sum;
+        results[i]= outputs.enumOutput.candidate_true_count_sum;
+        embeddings[i] = outputs.enumOutput.embedding_cnt;
 
     }
 
@@ -113,6 +113,75 @@ void Experiments::experiment2(string data_graph,string query_graph,string eigen,
     cout<<" "<<endl;
     cout<<"--------------------------"<<endl;
 }
+
+//This experiment compare the overall performance of each algorithm with and without eigen value enhanced filter.
+void Experiments::experiment3(const string data_graph_path,const string query_graph_path,const string eigen) {
+
+    string filters[6] = {"LDF","NLF","GQL","TSO","CFL","DPiso"};
+
+    matching_algo_inputs inputs;
+    inputs.dgraph_path = data_graph_path;
+    inputs.qgraph_path = query_graph_path;
+    inputs.filter = filters[2];
+    inputs.order = "GQL";
+    inputs.engine = "LFTJ";
+    inputs.eigen = eigen;
+
+    matching_algo_outputs outputs = StudyPerformance::solveGraphQuery(inputs);
+
+    cout<<"candidate true sum: "<<outputs.enumOutput.candidate_true_count_sum<<endl;
+
+//    cout<<"candidates: "<<endl;
+//    for(int i =0; i<outputs.query_size;i++){
+//        for (ui const&cand: outputs.candidate[i]){
+//            std::cout << cand << ' ';
+//        }
+//    }
+//    cout<<" "<<endl;
+//    cout<<"candidates true: "<<endl;
+//    for(int i =0; i<outputs.query_size;i++){
+//        for (ui const&cand: outputs.enumOutput.candidate_true[i]){
+//            std::cout << cand << ' ';
+//        }
+//    }
+    cout<<"candidate sum: "<<outputs.candidate_count_sum<<endl;
+    cout<<"embedding count: "<<outputs.enumOutput.embedding_cnt<<endl;
+    candidate_set_correctnesscheck(outputs.candidate,outputs.enumOutput.candidate_true,outputs.query_size);
+    cout<<eigen<<" total time "<<outputs.total_time<<endl;
+
+}
+
+bool Experiments::candidate_set_correctnesscheck(vector<set<ui>> candidate, vector<set<ui>> candidate_true, ui query_size) {
+    if(candidate.size()!=candidate_true.size()){
+        return false;
+    }
+    for(int i =0; i< query_size;i++){
+        if(!std::includes(candidate[i].begin(),candidate[i].end(),
+                         candidate_true[i].begin(),candidate_true[i].end())){
+            cout<<"Pruning process of vertex "<<i<<" contains false negative"<<endl;
+            cout<<"candidate set"<<endl;
+            for (ui const&cand: candidate[i]){
+                std::cout << cand << ' ';
+            }
+            cout<<" "<<endl;
+            cout<<"candidate set true"<<endl;
+            for (ui const&cand: candidate_true[i]){
+                std::cout << cand << ' ';
+            }
+            cout<<" "<<endl;
+            return false;
+        }
+    }
+    cout<<"The candidate set passed the correctness check, the ground truth is a subset of candidate set."<<endl;
+    return true;
+}
+
+
+
+
+// Compute the ground truth for each query.
+//void Experiments::experiment4(const string data_graph_path, const string query_graph_path, const string eigen) {
+//}
 
 
 //int main(int argc, char** argv){
@@ -170,8 +239,8 @@ void Experiments::experiment2(string data_graph,string query_graph,string eigen,
 //        Graph* query_graph = new Graph(true);
 //        query_graph->loadGraphFromFile(querypath[i]);
 //        query_graph->buildCoreTable();
-//        string results = to_string(i)+",";
-//        string results2 = results.append(experiment(data_graph,query_graph));
+//        string candidate_true = to_string(i)+",";
+//        string results2 = candidate_true.append(experiment(data_graph,query_graph));
 //        myfile.open ("wordnetexperiment.csv",std::ios_base::app);
 //        myfile<<results2;
 //        myfile.close();

@@ -30,8 +30,8 @@ typedef std::priority_queue<std::pair<std::pair<VertexID, ui>, ui>, std::vector<
 
 struct enumResult {
     size_t embedding_cnt;
-    set<ui> results;
-    int true_cand_sum;
+    ui candidate_true_count_sum;
+    vector<set<ui>> candidate_true;
 };
 
 class EvaluateQuery {
@@ -42,7 +42,7 @@ public:
     static enumResult LFTJ(const Graph *data_graph, const Graph *query_graph, Edges ***edge_matrix, ui **candidates, ui *candidates_count,
                            ui *order, size_t output_limit_num, size_t &call_count);
 
-    static size_t
+    static enumResult
     exploreGraphQLStyle(const Graph *data_graph, const Graph *query_graph, ui **candidates, ui *candidates_count, ui *order,
                             size_t output_limit_num, size_t &call_count);
 

@@ -57,7 +57,7 @@ namespace Spectra {
 ///     eigs.init();
 ///     int nconv = eigs.compute(SortRule::LargestMagn);
 ///
-///     // Retrieve results
+///     // Retrieve candidate_true
 ///     Eigen::VectorXcd evalues;
 ///     if (eigs.info() == CompInfo::Successful)
 ///         evalues = eigs.eigenvalues();
@@ -105,7 +105,7 @@ namespace Spectra {
 ///     eigs.init();
 ///     int nconv = eigs.compute(SortRule::LargestMagn);
 ///
-///     // Retrieve results
+///     // Retrieve candidate_true
 ///     Eigen::VectorXcd evalues;
 ///     if (eigs.info() == CompInfo::Successful)
 ///         evalues = eigs.eigenvalues();
