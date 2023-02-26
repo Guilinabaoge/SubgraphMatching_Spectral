@@ -9,8 +9,37 @@
 
 #include <iostream>
 #include <numeric>
+#include <fstream>
+#include <iterator>
+#include <string>
+#include <vector>
 
 string Experiments::datagraphEigenMatrix;
+
+bool Experiments::candidate_set_correctnesscheck(vector<set<ui>> candidate, vector<set<ui>> candidate_true, ui query_size) {
+    if(candidate.size()!=candidate_true.size()){
+        return false;
+    }
+    for(int i =0; i< query_size;i++){
+        if(!std::includes(candidate[i].begin(),candidate[i].end(),
+                          candidate_true[i].begin(),candidate_true[i].end())){
+            cout<<"Pruning process of vertex "<<i<<" contains false negative"<<endl;
+            cout<<"candidate set"<<endl;
+            for (ui const&cand: candidate[i]){
+                std::cout << cand << ' ';
+            }
+            cout<<" "<<endl;
+            cout<<"candidate set true"<<endl;
+            for (ui const&cand: candidate_true[i]){
+                std::cout << cand << ' ';
+            }
+            cout<<" "<<endl;
+            return false;
+        }
+    }
+    cout<<"The candidate set passed the correctness check, the ground truth is a subset of candidate set."<<endl;
+    return true;
+}
 
 // This experiment computes the candidate number for each filters with and without EF.
 string Experiments::experiment1(Graph *data_graph, Graph *query_graph){
@@ -69,7 +98,6 @@ string Experiments::experiment1(Graph *data_graph, Graph *query_graph){
 
 //This experiment computes candidates for each filter and check if it will generate correct ground truth.
 void Experiments::experiment2(string data_graph_path,string query_graph_path,string eigen){
-
 
     // -d ../../test/reallife_dataset/wordnet/data_graph/wordnet.graph -q ../../test/reallife_dataset/wordnet/query_graph/query_dense_12_2.graph -filter GQL -order GQL -engine LFTJ -num MAX -eigen 1 -tops 10
     //TODO Missing CECI
@@ -130,51 +158,40 @@ void Experiments::experiment3(const string data_graph_path,const string query_gr
     matching_algo_outputs outputs = StudyPerformance::solveGraphQuery(inputs);
 
     cout<<"candidate true sum: "<<outputs.enumOutput.candidate_true_count_sum<<endl;
-
-//    cout<<"candidates: "<<endl;
-//    for(int i =0; i<outputs.query_size;i++){
-//        for (ui const&cand: outputs.candidate[i]){
-//            std::cout << cand << ' ';
-//        }
-//    }
-//    cout<<" "<<endl;
-//    cout<<"candidates true: "<<endl;
-//    for(int i =0; i<outputs.query_size;i++){
-//        for (ui const&cand: outputs.enumOutput.candidate_true[i]){
-//            std::cout << cand << ' ';
-//        }
-//    }
     cout<<"candidate sum: "<<outputs.candidate_count_sum<<endl;
     cout<<"embedding count: "<<outputs.enumOutput.embedding_cnt<<endl;
     candidate_set_correctnesscheck(outputs.candidate,outputs.enumOutput.candidate_true,outputs.query_size);
     cout<<eigen<<" total time "<<outputs.total_time<<endl;
-
 }
 
-bool Experiments::candidate_set_correctnesscheck(vector<set<ui>> candidate, vector<set<ui>> candidate_true, ui query_size) {
-    if(candidate.size()!=candidate_true.size()){
-        return false;
-    }
-    for(int i =0; i< query_size;i++){
-        if(!std::includes(candidate[i].begin(),candidate[i].end(),
-                         candidate_true[i].begin(),candidate_true[i].end())){
-            cout<<"Pruning process of vertex "<<i<<" contains false negative"<<endl;
-            cout<<"candidate set"<<endl;
-            for (ui const&cand: candidate[i]){
-                std::cout << cand << ' ';
-            }
-            cout<<" "<<endl;
-            cout<<"candidate set true"<<endl;
-            for (ui const&cand: candidate_true[i]){
-                std::cout << cand << ' ';
-            }
-            cout<<" "<<endl;
-            return false;
+//This experiment will generate the ground truth of each query and store them in a file.
+void Experiments::experiment4(const std::string data_graph_path, const std::string query_graph_path,
+                              const std::string eigen) {
+    matching_algo_inputs inputs;
+    inputs.dgraph_path = data_graph_path;
+    inputs.qgraph_path = query_graph_path;
+    inputs.filter = "GQL";
+    inputs.order = "GQL";
+    inputs.engine = "LFTJ";
+    inputs.eigen = eigen;
+
+    matching_algo_outputs outputs = StudyPerformance::solveGraphQuery(inputs);
+
+    fstream file;
+    file.open("vector_file_2.txt",ios_base::out);
+    for (int i =0; i< outputs.query_size; i++){
+        for (set<ui>::iterator it=outputs.enumOutput.candidate_true[i].begin(); it!=outputs.enumOutput.candidate_true[i].end(); ++it){
+            file<<*it<<" ";
         }
+        file<<"\n";
     }
-    cout<<"The candidate set passed the correctness check, the ground truth is a subset of candidate set."<<endl;
-    return true;
+    file.close();
+
 }
+
+
+
+
 
 
 

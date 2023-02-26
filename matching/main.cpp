@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
 //    string query_graph_path = "../../test/reallife_dataset/wordnet/query_graph/query_dense_16_2.graph";
     Experiments::datagraphEigenMatrix = "yeast.csv";
     string dataset = "yeast";
-    string query_size = "24";
+    string query_size = "4";
     string query_number = "1";
 
     std::ostringstream data;
@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
     std::string query_graph_path = query.str();
 
 //    Experiments::experiment3(data_graph_path,query_graph_path,"0");
-    Experiments::experiment3(data_graph_path,query_graph_path,"1");
+    Experiments::experiment4(data_graph_path,query_graph_path,"0");
 
 
 

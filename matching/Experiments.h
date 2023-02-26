@@ -20,6 +20,7 @@ public:
     static std::string experiment1(Graph *data_graph, Graph *query_graph);
     static void experiment2(std::string data_graph,std::string query_graph,std::string eigen);
     static void experiment3(const std::string data_graph_path,const std::string query_graph_path,const std::string eigen);
+    static void experiment4(const std::string data_graph_path,const std::string query_graph_path,const std::string eigen);
 };
 
 
