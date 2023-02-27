@@ -438,7 +438,9 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     int sum = 0;
     outputs.candidate_count_sum = accumulate(candidates_count, candidates_count + query_graph->getVerticesCount(), sum);
     outputs.enumOutput = s;
+    bool isvalid_candidates = Experiments::candidate_set_correctness_check(outputs.candidate,s.candidate_true,query_graph->getVerticesCount());
 
+    if(!isvalid_candidates) throw invalid_argument("Invalid candidate set, false negative occurs.");
 
 #ifdef DISTRIBUTION
     std::ofstream outfile (input_distribution_file_path , std::ofstream::binary);

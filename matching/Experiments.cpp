@@ -176,14 +176,14 @@ void Experiments::experiment2(string data_graph_path,string query_graph_path,str
 }
 
 //This experiment compare the overall performance of each algorithm with and without eigen value enhanced filter.
-void Experiments::experiment3(const string data_graph_path,const string query_graph_path,const string eigen) {
+void Experiments::experiment3(const string data_graph_path,const string query_graph_path,const string filter,const string eigen) {
 
-    string filters[6] = {"LDF","NLF","GQL","TSO","CFL","DPiso"};
+//    string filters[6] = {"LDF","NLF","GQL","TSO","CFL","DPiso"};
 
     matching_algo_inputs inputs;
     inputs.dgraph_path = data_graph_path;
     inputs.qgraph_path = query_graph_path;
-    inputs.filter = filters[2];
+    inputs.filter = filter;
     inputs.order = "GQL";
     inputs.engine = "LFTJ";
     inputs.eigen = eigen;
@@ -193,16 +193,19 @@ void Experiments::experiment3(const string data_graph_path,const string query_gr
     cout<<"candidate true sum: "<<outputs.enumOutput.candidate_true_count_sum<<endl;
     cout<<"candidate sum: "<<outputs.candidate_count_sum<<endl;
     cout<<"embedding count: "<<outputs.enumOutput.embedding_cnt<<endl;
-    candidate_set_correctness_check(outputs.candidate, outputs.enumOutput.candidate_true, outputs.query_size);
-    cout<<eigen<<" total time "<<outputs.total_time<<endl;
+    if(stoi(eigen)){
+        cout<<"With eigen filter total time "<<outputs.total_time<<endl;
+    } else{
+        cout<<"No eigen filter total time "<<outputs.total_time<<endl;
+    }
+
 }
 
 //This experiment will generate the ground truth of each query and store them in a file.
-void Experiments::experiment4(const std::string data_graph_path, const std::string query_graph_path,
-                              const std::string eigen, queryMeta meta) {
+void Experiments::experiment4(const std::string eigen, queryMeta meta) {
     matching_algo_inputs inputs;
-    inputs.dgraph_path = data_graph_path;
-    inputs.qgraph_path = query_graph_path;
+    inputs.dgraph_path = meta.data_graph_path;
+    inputs.qgraph_path = meta.query_path;
     inputs.filter = "GQL";
     inputs.order = "GQL";
     inputs.engine = "LFTJ";
@@ -213,7 +216,7 @@ void Experiments::experiment4(const std::string data_graph_path, const std::stri
     fstream file;
 
     std::ostringstream file_name;
-    file_name << "ground_truth/yeast/"<<meta.dataset<<"_"<<meta.query_property<<"_"<<meta.query_size<<"_"<<meta.query_number<<".txt";
+    file_name << "ground_truth/"<<meta.dataset<<"/"<<meta.dataset<<"_"<<meta.query_property<<"_"<<meta.query_size<<"_"<<meta.query_number<<".txt";
     std::string file_path = file_name.str();
 
     file.open(file_path,ios_base::out);
