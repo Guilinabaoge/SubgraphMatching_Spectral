@@ -13,10 +13,43 @@
 #include <iterator>
 #include <string>
 #include <vector>
+#include <sstream>
 
 string Experiments::datagraphEigenMatrix;
 
-bool Experiments::candidate_set_correctnesscheck(vector<set<ui>> candidate, vector<set<ui>> candidate_true, ui query_size) {
+
+// Interpret the ground truth store in the file;
+vector<set<ui>> Experiments::ground_truth_interpreter(string path) {
+    vector<set<ui>> ground_truth;
+    ifstream file_in(path);
+    if(!file_in){
+        throw invalid_argument("ground truth file doesn't exist");
+    }
+
+    string line;
+    while (getline(file_in,line)){
+        istringstream ss(line);
+        ground_truth.push_back(set<ui>());
+
+        int x;
+        while (ss>>x) ground_truth.back().insert(x);
+    }
+
+#ifdef PRINT_GROUND_TRUTH
+    for (auto elem : ground_truth) {
+        for(auto candidate : elem){
+            cout << candidate << " ";
+        }
+        cout<<" "<<endl;
+    }
+#endif
+
+    return ground_truth;
+}
+
+
+//Return true if candidate_true is a subset of candidate.
+bool Experiments::candidate_set_correctness_check(vector<set<ui>> candidate, vector<set<ui>> candidate_true, ui query_size) {
     if(candidate.size()!=candidate_true.size()){
         return false;
     }
@@ -160,13 +193,13 @@ void Experiments::experiment3(const string data_graph_path,const string query_gr
     cout<<"candidate true sum: "<<outputs.enumOutput.candidate_true_count_sum<<endl;
     cout<<"candidate sum: "<<outputs.candidate_count_sum<<endl;
     cout<<"embedding count: "<<outputs.enumOutput.embedding_cnt<<endl;
-    candidate_set_correctnesscheck(outputs.candidate,outputs.enumOutput.candidate_true,outputs.query_size);
+    candidate_set_correctness_check(outputs.candidate, outputs.enumOutput.candidate_true, outputs.query_size);
     cout<<eigen<<" total time "<<outputs.total_time<<endl;
 }
 
 //This experiment will generate the ground truth of each query and store them in a file.
 void Experiments::experiment4(const std::string data_graph_path, const std::string query_graph_path,
-                              const std::string eigen) {
+                              const std::string eigen, queryMeta meta) {
     matching_algo_inputs inputs;
     inputs.dgraph_path = data_graph_path;
     inputs.qgraph_path = query_graph_path;
@@ -178,7 +211,12 @@ void Experiments::experiment4(const std::string data_graph_path, const std::stri
     matching_algo_outputs outputs = StudyPerformance::solveGraphQuery(inputs);
 
     fstream file;
-    file.open("vector_file_2.txt",ios_base::out);
+
+    std::ostringstream file_name;
+    file_name << "ground_truth/yeast/"<<meta.dataset<<"_"<<meta.query_property<<"_"<<meta.query_size<<"_"<<meta.query_number<<".txt";
+    std::string file_path = file_name.str();
+
+    file.open(file_path,ios_base::out);
     for (int i =0; i< outputs.query_size; i++){
         for (set<ui>::iterator it=outputs.enumOutput.candidate_true[i].begin(); it!=outputs.enumOutput.candidate_true[i].end(); ++it){
             file<<*it<<" ";
