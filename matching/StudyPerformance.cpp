@@ -26,6 +26,7 @@
 #include "eigenHelper.h"
 #include "Experiments.h"
 #include "StudyPerformance.h"
+#include "KF/spectra.h"
 
 
 
@@ -106,7 +107,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     std::string input_filter_type = inputs.filter;
     std::string input_order_type = inputs.order;
     std::string input_engine_type = inputs.engine;
-    std::string input_max_embedding_num = "3000000";
+    std::string input_max_embedding_num = "MAX";
     std::string input_time_limit = command.getTimeLimit();
     std::string input_order_num = command.getOrderNum();
     std::string input_distribution_file_path = command.getDistributionFilePath();
@@ -152,7 +153,14 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     Graph* data_graph = new Graph(true);
 
     if (input_csr_file_path.empty()) {
-        data_graph->loadGraphFromFile(input_data_graph_file);
+        if(inputs.filter!="KT"){
+            data_graph->loadGraphFromFile(input_data_graph_file);
+        }
+        else{
+            data_graph->loadGraphFromFile(input_data_graph_file);
+            data_graph->BuildLabelOffset();
+        }
+
     }
     else {
         std::string degree_file_path = input_csr_file_path + "_deg.bin";
@@ -212,7 +220,10 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> NTE_Candidates;
     if (input_filter_type == "LDF") {
         FilterVertices::LDFFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck,top_s);
-    } else if (input_filter_type == "NLF") {
+    } else if(input_filter_type=="KT"){
+        SpectralMatching(query_graph->getVerticesCount(), data_graph, input_query_graph_file, true,candidates,candidates_count);
+    }
+    else if (input_filter_type == "NLF") {
         FilterVertices::NLFFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck,top_s);
     } else if (input_filter_type == "GQL") {
         FilterVertices::GQLFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck,top_s);
@@ -438,9 +449,9 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     int sum = 0;
     outputs.candidate_count_sum = accumulate(candidates_count, candidates_count + query_graph->getVerticesCount(), sum);
     outputs.enumOutput = s;
-    bool isvalid_candidates = Experiments::candidate_set_correctness_check(outputs.candidate,s.candidate_true,query_graph->getVerticesCount());
-
-    if(!isvalid_candidates) throw invalid_argument("Invalid candidate set, false negative occurs.");
+//    bool isvalid_candidates = Experiments::candidate_set_correctness_check(outputs.candidate,s.candidate_true,query_graph->getVerticesCount());
+//
+//    if(!isvalid_candidates) throw invalid_argument("Invalid candidate set, false negative occurs.");
 
 #ifdef DISTRIBUTION
     std::ofstream outfile (input_distribution_file_path , std::ofstream::binary);

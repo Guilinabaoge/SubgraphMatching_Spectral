@@ -46,10 +46,12 @@ private:
 
 #if OPTIMIZED_LABELED_GRAPH == 1
     void BuildNLF();
-    void BuildLabelOffset();
+    //use to be private here
+//    void BuildLabelOffset();
 #endif
 
 public:
+    void BuildLabelOffset();
     Graph(const bool enable_label_offset) {
         enable_label_offset_ = enable_label_offset;
 
@@ -145,6 +147,8 @@ public:
         return reverse_index_ + reverse_index_offsets_[id];
     }
 
+
+
 #if OPTIMIZED_LABELED_GRAPH == 1
     const ui * getNeighborsByLabel(const VertexID id, const LabelID label, ui& count) const {
         ui offset = id * labels_count_ + label;
@@ -155,6 +159,8 @@ public:
     const std::unordered_map<LabelID, ui>* getVertexNLF(const VertexID id) const {
         return nlf_ + id;
     }
+
+
 
     bool checkEdgeExistence(const VertexID u, const VertexID v, const LabelID u_label) const {
         ui count = 0;

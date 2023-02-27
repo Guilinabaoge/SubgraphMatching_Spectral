@@ -31,6 +31,8 @@ int main(int argc, char** argv) {
 //    string data_graph_path = "../../test/reallife_dataset/wordnet/data_graph/wordnet.graph";
 //    string query_graph_path = "../../test/reallife_dataset/wordnet/query_graph/query_dense_16_2.graph";
 
+//generate_datagraph_eigenvector("../../test/reallife_dataset/dblp/data_graph/dblp.graph","dplp.csv");
+
 //yeast,hprd,uspatents,youtube,dblp,eu2005,
 vector<string> query_size_dense_1 = {"4","8","16","24","32"};
 vector<string> query_size_sparse_1 = {"8","16","24","32"};
@@ -40,12 +42,12 @@ vector<string> query_size_dense_2 = {"4","8","12","16","20"};
 vector<string> query_size_sparse_2 = {"8","12","16","20"};
 
 
-Experiments::datagraphEigenMatrix = "yeast.csv";
+Experiments::datagraphEigenMatrix = "wordnet.csv";
 queryMeta meta;
-meta.dataset = "yeast";
+meta.dataset = "wordnet";
 meta.query_property = "dense";
-meta.query_size = query_size_dense_1[0];
-meta.query_number = "1";
+meta.query_size = query_size_dense_1[1];
+meta.query_number = "2";
 
 std::ostringstream data;
 data << "../../test/reallife_dataset/" << meta.dataset << "/data_graph/" << meta.dataset << ".graph";
@@ -57,6 +59,8 @@ query << "../../test/reallife_dataset/" << meta.dataset << "/query_graph/query_"
 meta.query_path = query.str();
 
 Experiments::experiment3(meta.data_graph_path,meta.query_path,"GQL","0");
+Experiments::experiment3(meta.data_graph_path,meta.query_path,"KT","1");
+
 
 //for(int i = 1; i<201;i++ ) {
 //    Experiments::datagraphEigenMatrix = "yeast.csv";

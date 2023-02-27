@@ -123,6 +123,14 @@ public:
                                const std::string& label_path);
     void printGraphMetaData();
 public:
+    //We change here
+    void getNeighborsByLabelCount(const VertexID id, const LabelID label, ui& count) const {
+        ui offset = id * labels_count_ + label;
+        count = labels_offsets_[offset + 1] - labels_offsets_[offset];
+    }
+    //We change here
+
+
     const ui getLabelsCount() const {
         return labels_count_;
     }

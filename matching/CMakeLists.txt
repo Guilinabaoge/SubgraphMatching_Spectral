@@ -1,4 +1,7 @@
 set(SUBGRAPH_MATCHING_FILE_LIST
+        KF/cs.h
+        KF/spectra.cpp
+        KF/spectra.h
         Experiments.cpp
         Experiments.h
         IO.cpp
