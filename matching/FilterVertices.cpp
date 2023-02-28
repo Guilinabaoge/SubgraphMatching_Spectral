@@ -120,10 +120,11 @@ FilterVertices::NLFFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
     allocateBuffer(data_graph, query_graph, candidates, candidates_count);
 
     MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
-    MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
     MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
-    datagraph_eigenvalue = openData(Experiments::datagraphEigenMatrix);
-
+    if(isEigenCheck){
+        MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
+        datagraph_eigenvalue = openData(Experiments::datagraphEigenMatrix);
+    }
     for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
         VertexID query_vertex = i;
         computeCandidateWithNLF(data_graph, query_graph, query_vertex, candidates_count[query_vertex],candidates[query_vertex],

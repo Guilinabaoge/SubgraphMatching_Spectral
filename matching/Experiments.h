@@ -26,13 +26,13 @@ struct queryMeta{
 
 class Experiments {
 public:
-    static std::string datagraphEigenMatrix;
-    static std::vector<std::set<ui>> ground_truth_interpreter(std::string path);
+    static string datagraphEigenMatrix;
+    static vector<std::set<ui>> ground_truth_interpreter(string path);
     static bool candidate_set_correctness_check(vector<set<ui>> candidate, vector<set<ui>> candidate_true, ui query_size);
-    static std::string experiment1(Graph *data_graph, Graph *query_graph);
-    static void experiment2(std::string data_graph,std::string query_graph,std::string eigen);
-    static void experiment3(const std::string data_graph_path,const std::string query_graph_path,const std::string filter,const std::string eigen);
-    static void experiment4(const std::string eigen,queryMeta meta);
+    static string experiment1(Graph *data_graph, Graph *query_graph);
+    static void experiment2(string data_graph,string query_graph,string eigen);
+    static pair<string,string> experiment3(const string data_graph_path,const std::string query_graph_path,const std::string filter,const std::string eigen);
+    static void experiment4(const string eigen,queryMeta meta);
 };
 
 

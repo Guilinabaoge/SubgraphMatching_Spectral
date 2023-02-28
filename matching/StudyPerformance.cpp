@@ -107,7 +107,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     std::string input_filter_type = inputs.filter;
     std::string input_order_type = inputs.order;
     std::string input_engine_type = inputs.engine;
-    std::string input_max_embedding_num = "MAX";
+    std::string input_max_embedding_num = "20000000";
     std::string input_time_limit = command.getTimeLimit();
     std::string input_order_num = command.getOrderNum();
     std::string input_distribution_file_path = command.getDistributionFilePath();
@@ -118,7 +118,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     /**
      * Output the command line information.
      */
-#ifdef PRINT
+#ifdef PRINT1
     std::cout << "Command Line:" << std::endl;
     std::cout << "\tData Graph CSR: " << input_csr_file_path << std::endl;
     std::cout << "\tData Graph: " << input_data_graph_file << std::endl;
@@ -138,7 +138,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     /**
      * Load input graphs.
      */
-#ifdef PRINT
+#ifdef PRINT1
     std::cout << "Load graphs..." << std::endl;
 #endif
 
@@ -153,7 +153,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     Graph* data_graph = new Graph(true);
 
     if (input_csr_file_path.empty()) {
-        if(inputs.filter!="KT"){
+        if(inputs.filter!="KF"){
             data_graph->loadGraphFromFile(input_data_graph_file);
         }
         else{
@@ -179,7 +179,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     if(query_graph->getVerticesCount()==8) input_tops = "8";
 
 
-#ifdef PRINT
+#ifdef PRINT1
     std::cout << "-----" << std::endl;
     std::cout << "Query Graph Meta Information" << std::endl;
     query_graph->printGraphMetaData();
@@ -193,7 +193,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
      */
 
 
-#ifdef PRINT
+#ifdef PRINT1
     std::cout << "Start queries..." << std::endl;
     std::cout << "-----" << std::endl;
     std::cout << "Filter candidates..." << std::endl;
@@ -220,7 +220,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> NTE_Candidates;
     if (input_filter_type == "LDF") {
         FilterVertices::LDFFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck,top_s);
-    } else if(input_filter_type=="KT"){
+    } else if(input_filter_type=="KF"){
         SpectralMatching(query_graph->getVerticesCount(), data_graph, input_query_graph_file, true,candidates,candidates_count);
     }
     else if (input_filter_type == "NLF") {
@@ -268,7 +268,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     FilterVertices::printCandidatesInfo(query_graph, candidates_count, optimal_candidates_count);
 #endif
 
-#ifdef PRINT
+#ifdef PRINT1
     std::cout << "-----" << std::endl;
     std::cout << "Build indices..." << std::endl;
 #endif
@@ -290,19 +290,19 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     size_t memory_cost_in_bytes = 0;
     if (input_filter_type != "CECI") {
         memory_cost_in_bytes = BuildTable::computeMemoryCostInBytes(query_graph, candidates_count, edge_matrix);
-#ifdef PRINT
+#ifdef PRINT1
         BuildTable::printTableCardinality(query_graph, edge_matrix);
 #endif
     }
     else {
         memory_cost_in_bytes = BuildTable::computeMemoryCostInBytes(query_graph, candidates_count, ceci_order, ceci_tree,
                                                                     TE_Candidates, NTE_Candidates);
-#ifdef PRINT
+#ifdef PRINT1
         BuildTable::printTableCardinality(query_graph, ceci_tree, ceci_order, TE_Candidates, NTE_Candidates);
 #endif
     }
 
-#ifdef PRINT
+#ifdef PRINT1
     std::cout << "-----" << std::endl;
     std::cout << "Generate a matching order..." << std::endl;
 #endif
@@ -363,21 +363,27 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
 
     if (input_order_type != "Spectrum") {
         GenerateQueryPlan::checkQueryPlanCorrectness(query_graph, matching_order, pivots);
-#ifdef PRINT
+#ifdef PRINT1
         GenerateQueryPlan::printSimplifiedQueryPlan(query_graph, matching_order);
 #endif
     }
     else {
-#ifdef PRINT
+#ifdef PRINT1
         std::cout << "Generate " << spectrum.size() << " matching orders." << std::endl;
 #endif
 
     }
 
-#ifdef PRINT
+#ifdef PRINT1
     std::cout << "-----" << std::endl;
     std::cout << "Enumerate..." << std::endl;
 #endif
+
+    //Add the matching order into return struct
+    for(int i =0; i<outputs.query_size;i++){
+        outputs.matching_order.push_back(matching_order[i]);
+    }
+
 
     size_t output_limit = 0;
     size_t embedding_count = 0;
@@ -459,7 +465,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     delete[] EvaluateQuery::distribution_count_;
 #endif
 
-#ifdef PRINT
+#ifdef PRINT1
     std::cout << "--------------------------------------------------------------------" << std::endl;
     std::cout << "Release memories..." << std::endl;
 #endif
@@ -508,6 +514,8 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     double preprocessing_time_in_ns = filter_vertices_time_in_ns + build_table_time_in_ns + generate_query_plan_time_in_ns;
     double total_time_in_ns = preprocessing_time_in_ns + enumeration_time_in_ns;
     outputs.total_time = NANOSECTOSEC(total_time_in_ns);
+    outputs.preprocessing_time = NANOSECTOSEC(preprocessing_time_in_ns);
+    outputs.enumeration_time = NANOSECTOSEC(enumeration_time_in_ns);
 #ifdef PRINT
     std::cout << "--------------------------------------------------------------------" << std::endl;
     printf("Load graphs time (seconds): %.4lf\n", NANOSECTOSEC(load_graphs_time_in_ns));
@@ -520,6 +528,8 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     printf("Memory cost (MB): %.4lf\n", BYTESTOMB(memory_cost_in_bytes));
     printf("#Embeddings: %zu\n", embedding_count);
     printf("Call Count: %zu\n", call_count);
+    printf("Candidate count sum %zu\n",outputs.candidate_count_sum);
+    printf("Candidate true sum so far %zu\n",outputs.enumOutput.candidate_true_count_sum);
     printf("Per Call Count Time (nanoseconds): %.4lf\n", enumeration_time_in_ns / (call_count == 0 ? 1 : call_count));
     std::cout << "End." << std::endl;
 #endif

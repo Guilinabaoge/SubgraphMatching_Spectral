@@ -23,6 +23,9 @@ struct matching_algo_outputs{
     vector<set<ui>> candidate;
     ui candidate_count_sum;
     double total_time;
+    double preprocessing_time;
+    double enumeration_time;
+    vector<ui> matching_order;
 };
 
 class StudyPerformance{

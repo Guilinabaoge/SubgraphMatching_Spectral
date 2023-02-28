@@ -176,7 +176,7 @@ void Experiments::experiment2(string data_graph_path,string query_graph_path,str
 }
 
 //This experiment compare the overall performance of each algorithm with and without eigen value enhanced filter.
-void Experiments::experiment3(const string data_graph_path,const string query_graph_path,const string filter,const string eigen) {
+pair<string,string> Experiments::experiment3(const string data_graph_path,const string query_graph_path,const string filter,const string eigen) {
 
 //    string filters[6] = {"LDF","NLF","GQL","TSO","CFL","DPiso"};
 
@@ -193,11 +193,20 @@ void Experiments::experiment3(const string data_graph_path,const string query_gr
     cout<<"candidate true sum: "<<outputs.enumOutput.candidate_true_count_sum<<endl;
     cout<<"candidate sum: "<<outputs.candidate_count_sum<<endl;
     cout<<"embedding count: "<<outputs.enumOutput.embedding_cnt<<endl;
-    if(stoi(eigen)){
-        cout<<"With eigen filter total time "<<outputs.total_time<<endl;
-    } else{
-        cout<<"No eigen filter total time "<<outputs.total_time<<endl;
+    cout<<"enumeration time: "<<outputs.enumeration_time<<endl;
+    cout<<"preprocessing time: "<<outputs.preprocessing_time<<endl;
+    cout<<"matching order: ";
+    for (int i=0; i<outputs.query_size;i++){
+        cout<<outputs.matching_order[i]<<" ";
     }
+    cout<<" "<<endl;
+    if(stoi(eigen)){
+        cout<<filter<<" With eigen filter total time "<<outputs.total_time<<endl;
+    } else{
+        cout<<filter<<" No eigen filter total time "<<outputs.total_time<<endl;
+    }
+
+    return {to_string(outputs.total_time),to_string(outputs.enumOutput.embedding_cnt)};
 
 }
 
