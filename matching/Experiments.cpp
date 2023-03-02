@@ -176,7 +176,7 @@ void Experiments::experiment2(string data_graph_path,string query_graph_path,str
 }
 
 //This experiment compare the overall performance of each algorithm with and without eigen value enhanced filter.
-pair<string,string> Experiments::experiment3(const string data_graph_path,const string query_graph_path,const string filter,const string eigen) {
+matching_algo_outputs Experiments::experiment3(const string data_graph_path,const string query_graph_path,const string filter,const string eigen) {
 
 //    string filters[6] = {"LDF","NLF","GQL","TSO","CFL","DPiso"};
 
@@ -206,7 +206,7 @@ pair<string,string> Experiments::experiment3(const string data_graph_path,const 
         cout<<filter<<" No eigen filter total time "<<outputs.total_time<<endl;
     }
 
-    return {to_string(outputs.total_time),to_string(outputs.enumOutput.embedding_cnt)};
+    return outputs;
 
 }
 

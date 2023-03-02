@@ -107,8 +107,8 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     std::string input_filter_type = inputs.filter;
     std::string input_order_type = inputs.order;
     std::string input_engine_type = inputs.engine;
-    std::string input_max_embedding_num = "20000000";
-    std::string input_time_limit = command.getTimeLimit();
+    std::string input_max_embedding_num = "2000000";
+    std::string input_time_limit = "300";
     std::string input_order_num = command.getOrderNum();
     std::string input_distribution_file_path = command.getDistributionFilePath();
     std::string input_csr_file_path = command.getCSRFilePath();
@@ -414,6 +414,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
 
         s = EvaluateQuery::LFTJ(data_graph, query_graph, edge_matrix, candidates, candidates_count,
                                            matching_order, output_limit, call_count);
+
         embedding_count = s.embedding_cnt;
 
 

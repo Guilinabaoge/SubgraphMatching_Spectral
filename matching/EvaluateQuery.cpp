@@ -6,8 +6,11 @@
 #include "utility/computesetintersection.h"
 #include <vector>
 #include <cstring>
-
+#include <chrono>
+#include <time.h>
 #include "utility/pretty_print.h"
+
+#define CLOCKTOSEC(elapsed_time) ((elapsed_time)/(double)1000000)
 
 #if ENABLE_QFLITER == 1
 BSRGraph ***EvaluateQuery::qfliter_bsr_graph_;
@@ -268,6 +271,7 @@ EvaluateQuery::LFTJ(const Graph *data_graph, const Graph *query_graph, Edges ***
 
     enumResult s;
 
+
     for (int i=0; i<query_graph->getVerticesCount();i++){
         s.candidate_true.push_back(set<ui>());
     }
@@ -343,6 +347,7 @@ EvaluateQuery::LFTJ(const Graph *data_graph, const Graph *query_graph, Edges ***
 #endif
 
             if (cur_depth == max_depth - 1) {
+//                cout<<embedding_cnt<<endl;
                 embedding_cnt += 1;
                 visited_vertices[v] = false;
 
@@ -361,7 +366,7 @@ EvaluateQuery::LFTJ(const Graph *data_graph, const Graph *query_graph, Edges ***
                 vec_failing_set[cur_depth].set();
                 vec_failing_set[cur_depth - 1] |= vec_failing_set[cur_depth];
 #endif
-//                cout<<embedding_cnt<<endl;
+
                 if (embedding_cnt >= output_limit_num) {
                     goto EXIT;
                 }

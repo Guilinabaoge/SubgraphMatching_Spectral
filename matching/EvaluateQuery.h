@@ -10,6 +10,7 @@
 #include <vector>
 #include <queue>
 #include <bitset>
+#include "configuration/config.h"
 
 // Min priority queue.
 auto extendable_vertex_compare = [](std::pair<std::pair<VertexID, ui>, ui> l, std::pair<std::pair<VertexID, ui>, ui> r) {

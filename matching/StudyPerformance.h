@@ -2,12 +2,16 @@
 // Created by zhiwei zeng on 24/02/2023.
 //
 
+#include <string>
+#include <vector>
 #include "graph/graph.h"
 #include "EvaluateQuery.h"
+
 
 #ifndef SUBGRAPHMATCHING_STUDYPERFORMANCE_CPP_H
 #define SUBGRAPHMATCHING_STUDYPERFORMANCE_CPP_H
 
+using namespace std;
 struct matching_algo_inputs {
     string dgraph_path;
     string qgraph_path;
