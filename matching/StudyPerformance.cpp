@@ -33,6 +33,7 @@
 #define NANOSECTOSEC(elapsed_time) ((elapsed_time)/(double)1000000000)
 #define BYTESTOMB(memory_cost) ((memory_cost)/(double)(1024 * 1024))
 //#define PRINT;
+//#define ONLYCOUNTS;
 
 size_t StudyPerformance::enumerate(Graph* data_graph, Graph* query_graph, Edges*** edge_matrix, ui** candidates, ui* candidates_count,
                 ui* matching_order, size_t output_limit) {
@@ -107,7 +108,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     std::string input_filter_type = inputs.filter;
     std::string input_order_type = inputs.order;
     std::string input_engine_type = inputs.engine;
-    std::string input_max_embedding_num = "2000000";
+    std::string input_max_embedding_num = "MAX";
     std::string input_time_limit = "300";
     std::string input_order_num = command.getOrderNum();
     std::string input_distribution_file_path = command.getDistributionFilePath();
@@ -248,6 +249,12 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     end = std::chrono::high_resolution_clock::now();
     double filter_vertices_time_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
+    int sum = 0;
+    outputs.candidate_count_sum = accumulate(candidates_count, candidates_count + query_graph->getVerticesCount(), sum);
+
+#ifdef ONLYCOUNTS
+    return outputs;
+#endif
 
     for (int i=0; i<query_graph->getVerticesCount();i++){
         outputs.candidate.push_back(set<ui>());
@@ -453,8 +460,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     end = std::chrono::high_resolution_clock::now();
     double enumeration_time_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
-    int sum = 0;
-    outputs.candidate_count_sum = accumulate(candidates_count, candidates_count + query_graph->getVerticesCount(), sum);
+
     outputs.enumOutput = s;
 //    bool isvalid_candidates = Experiments::candidate_set_correctness_check(outputs.candidate,s.candidate_true,query_graph->getVerticesCount());
 //
