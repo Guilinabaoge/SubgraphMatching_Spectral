@@ -23,10 +23,20 @@ MatchingCommand::MatchingCommand(const int argc, char **argv) : CommandParser(ar
     options_key[OptionKeyword::CSRFilePath] = "-csr";
     options_key[OptionKeyword::IsEigenCheck] = "-eigen";
     options_key[OptionKeyword::TopSEigen] = "-tops";
+    options_key[OptionKeyword::Dataset] = "-dataset";    //dataset name
+    options_key[OptionKeyword::QuerySize] = "-qsize";
+    options_key[OptionKeyword::QueryProperty] = "-qprop";
     processOptions();
 };
 
 void MatchingCommand::processOptions() {
+
+    options_value[OptionKeyword::QuerySize] = getCommandOption(options_key[OptionKeyword::QuerySize]);
+
+    options_value[OptionKeyword::QueryProperty] = getCommandOption(options_key[OptionKeyword::QueryProperty]);
+
+    options_value[OptionKeyword::Dataset] = getCommandOption(options_key[OptionKeyword::Dataset]);
+
     // Eigen or not
     options_value[OptionKeyword::IsEigenCheck] = getCommandOption(options_key[OptionKeyword::IsEigenCheck]);
 

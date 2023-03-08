@@ -25,7 +25,10 @@ enum OptionKeyword {
     DistributionFilePath = 13,          // -dis_file, The output path of the distribution array
     CSRFilePath = 14,                    // -csr, The input csr file path
     IsEigenCheck =15,                //-eigen, Boolean, choose whether to enhance the filter with eigen check or not
-    TopSEigen = 16                  //-tops,  How many eigenvalues use for eigen check
+    TopSEigen = 16,                  //-tops,  How many eigenvalues use for eigen check
+    Dataset =17,                    // name of the dataset
+    QuerySize = 18,
+    QueryProperty = 19,
 };
 
 class MatchingCommand : public CommandParser{
@@ -38,6 +41,18 @@ private:
 
 public:
     MatchingCommand(int argc, char **argv);
+
+    std::string getQuerySize() {
+        return options_value[OptionKeyword::QuerySize];
+    }
+
+    std::string getQueryProperty() {
+        return options_value[OptionKeyword::QueryProperty];
+    }
+
+    std::string getDatasetName() {
+        return options_value[OptionKeyword::Dataset];
+    }
 
     std::string getEigenOrNot() {
         return options_value[OptionKeyword::IsEigenCheck];

@@ -200,3 +200,7 @@ As the synthetic datasets are large, we do not upload them. You can easily gener
 
 # SubgraphMatching
 # SubgraphMatching_Spectral
+# Spectral_Pruning
+# Spectral_Pruning
+# Spectral_Pruning
+# Spectral_Pruning

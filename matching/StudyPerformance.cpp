@@ -403,7 +403,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
 
 
 #if ENABLE_QFLITER == 1
-    EvaluateQuery::qfliter_bsr_ graph_ = BuildTable::qfliter_bsr_graph_;
+    EvaluateQuery::qfliter_bsr_graph_ = BuildTable::qfliter_bsr_graph_;
 #endif
 
     size_t call_count = 0;

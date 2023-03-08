@@ -351,10 +351,10 @@ EvaluateQuery::LFTJ(const Graph *data_graph, const Graph *query_graph, Edges ***
                 embedding_cnt += 1;
                 visited_vertices[v] = false;
 
-                //TODO do we consider the order here?
-                for (int i = 0; i<max_depth;i++){
-                    s.candidate_true[i].insert(embedding[i]);
-                }
+                //TODO ruined the performance here?
+//                for (int i = 0; i<max_depth;i++){
+//                    s.candidate_true[i].insert(embedding[i]);
+//                }
 
 
 #ifdef DISTRIBUTION

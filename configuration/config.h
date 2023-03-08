@@ -40,12 +40,12 @@
 /**
  * Define ENABLE_QFLITER to enable QFliter set intersection method.
  */
-// #define ENABLE_QFLITER 1
+//#define ENABLE_QFLITER 1
 
 /**
  * Define ENABLE_FAILING_SET to enable the failing set pruning set intersection method.
  */
-#define ENABLE_FAILING_SET
+//#define ENABLE_FAILING_SET
 
 /**
  * Enable collection the distribution of the candidate_true in the data graph.
