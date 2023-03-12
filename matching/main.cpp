@@ -19,72 +19,69 @@
 #include "StudyPerformance.h"
 
 
-void exact_eval(string querysize,string dataset,string property){
-    for(int j=1;j<201;j++){
-        Experiments::datagraphEigenMatrix = dataset+".csv";
-        queryMeta meta;
-        meta.dataset = dataset;
-        meta.query_property = property;
-        meta.query_size = querysize;
-        meta.query_number = to_string(j);
+void exact_eval(string dataset,string querysize,string querynumber,string property){
+    Experiments::datagraphEigenMatrix = dataset+".csv";
+    queryMeta meta;
+    meta.dataset = dataset;
+    meta.query_property = property;
+    meta.query_size = querysize;
+    meta.query_number = querynumber;
 
-        std::ostringstream data;
-        data << "../../test/reallife_dataset/" << meta.dataset << "/data_graph/" << meta.dataset << ".graph";
-        meta.data_graph_path = data.str();
+    std::ostringstream data;
+    data << "../../test/reallife_dataset/" << meta.dataset << "/data_graph/" << meta.dataset << ".graph";
+    meta.data_graph_path = data.str();
 
-        std::ostringstream query;
-        query << "../../test/reallife_dataset/" << meta.dataset << "/query_graph/query_" << meta.query_property << "_"
-              << meta.query_size << "_" << meta.query_number << ".graph";
-        meta.query_path = query.str();
+    std::ostringstream query;
+    query << "../../test/reallife_dataset/" << meta.dataset << "/query_graph/query_" << meta.query_property << "_"
+          << meta.query_size << "_" << meta.query_number << ".graph";
+    meta.query_path = query.str();
 
 
-        matching_algo_outputs LDF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"LDF","0");
-        matching_algo_outputs LDF_EF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"LDF","1");
-        matching_algo_outputs NLF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"NLF","0");
-        matching_algo_outputs NLF_EF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"NLF","1");
-        matching_algo_outputs GQL = Experiments::experiment3(meta.data_graph_path,meta.query_path,"GQL","0");
-        matching_algo_outputs GQL_EF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"GQL","1");
-        matching_algo_outputs TSOF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"TSO","0");
-        matching_algo_outputs TSOF_EF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"TSO","1");
-        matching_algo_outputs CFL = Experiments::experiment3(meta.data_graph_path,meta.query_path,"CFL","0");
-        matching_algo_outputs CFL_EF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"CFL","1");
-        matching_algo_outputs DPiso = Experiments::experiment3(meta.data_graph_path,meta.query_path,"DPiso","0");
-        matching_algo_outputs DPiso_EF =Experiments::experiment3(meta.data_graph_path,meta.query_path,"DPiso","1");
-        matching_algo_outputs KF =Experiments::experiment3(meta.data_graph_path,meta.query_path,"KF","0");
+    matching_algo_outputs LDF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"LDF","0");
+    matching_algo_outputs LDF_EF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"LDF","1");
+    matching_algo_outputs NLF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"NLF","0");
+    matching_algo_outputs NLF_EF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"NLF","1");
+    matching_algo_outputs GQL = Experiments::experiment3(meta.data_graph_path,meta.query_path,"GQL","0");
+    matching_algo_outputs GQL_EF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"GQL","1");
+    matching_algo_outputs TSOF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"TSO","0");
+    matching_algo_outputs TSOF_EF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"TSO","1");
+    matching_algo_outputs CFL = Experiments::experiment3(meta.data_graph_path,meta.query_path,"CFL","0");
+    matching_algo_outputs CFL_EF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"CFL","1");
+    matching_algo_outputs DPiso = Experiments::experiment3(meta.data_graph_path,meta.query_path,"DPiso","0");
+    matching_algo_outputs DPiso_EF =Experiments::experiment3(meta.data_graph_path,meta.query_path,"DPiso","1");
+    matching_algo_outputs KF =Experiments::experiment3(meta.data_graph_path,meta.query_path,"KF","0");
 
-        std::ostringstream oss;
-        oss <<meta.query_property<<"_"<<meta.query_size<<"_"<<meta.query_number<<"," <<LDF.total_time<<"," <<LDF_EF.total_time
-            <<","<<NLF.total_time<<"," <<NLF_EF.total_time<<","<<GQL.total_time<<"," <<GQL_EF.total_time<<"," <<TSOF.total_time<<"," <<TSOF_EF.total_time<<"," <<CFL.total_time
-            <<"," <<CFL_EF.total_time<<","<<DPiso.total_time<<"," <<DPiso_EF.total_time<<"," <<KF.total_time<<","<<LDF.enumOutput.embedding_cnt<<","<<LDF_EF.enumOutput.embedding_cnt
-            <<","<<NLF.enumOutput.embedding_cnt<<","<<NLF_EF.enumOutput.embedding_cnt<<","<<GQL.enumOutput.embedding_cnt
-            <<","<<GQL_EF.enumOutput.embedding_cnt<<","<<TSOF.enumOutput.embedding_cnt<<","<<TSOF_EF.enumOutput.embedding_cnt<<","<<CFL.enumOutput.embedding_cnt
-            <<","<<CFL_EF.enumOutput.embedding_cnt<<","<<DPiso.enumOutput.embedding_cnt<<","<<DPiso_EF.enumOutput.embedding_cnt<<","<<KF.enumOutput.embedding_cnt
-            <<","<<LDF.candidate_count_sum<<","<<LDF.enumOutput.candidate_true_count_sum<<","<<LDF_EF.candidate_count_sum<<","<<LDF_EF.enumOutput.candidate_true_count_sum
-            <<","<<NLF.candidate_count_sum<<","<<NLF.enumOutput.candidate_true_count_sum<<","<<NLF_EF.candidate_count_sum<<","<<NLF_EF.enumOutput.candidate_true_count_sum
-            <<","<<GQL.candidate_count_sum<<","<<GQL.enumOutput.candidate_true_count_sum<<","<<GQL_EF.candidate_count_sum<<","<<GQL_EF.enumOutput.candidate_true_count_sum
-            <<","<<TSOF.candidate_count_sum<<","<<TSOF.enumOutput.candidate_true_count_sum<<","<<TSOF_EF.candidate_count_sum<<","<<TSOF_EF.enumOutput.candidate_true_count_sum
-            <<","<<CFL.candidate_count_sum<<","<<CFL.enumOutput.candidate_true_count_sum<<","<<CFL_EF.candidate_count_sum<<","<<CFL_EF.enumOutput.candidate_true_count_sum
-            <<","<<DPiso.candidate_count_sum<<","<<DPiso.enumOutput.candidate_true_count_sum<<","<<DPiso_EF.candidate_count_sum<<","<<DPiso_EF.enumOutput.candidate_true_count_sum
-            <<","<<KF.candidate_count_sum<<","<<KF.enumOutput.candidate_true_count_sum;
+    std::ostringstream oss;
+    oss <<meta.query_property<<"_"<<meta.query_size<<"_"<<meta.query_number<<"," <<LDF.total_time<<"," <<LDF_EF.total_time
+        <<","<<NLF.total_time<<"," <<NLF_EF.total_time<<","<<GQL.total_time<<"," <<GQL_EF.total_time<<"," <<TSOF.total_time<<"," <<TSOF_EF.total_time<<"," <<CFL.total_time
+        <<"," <<CFL_EF.total_time<<","<<DPiso.total_time<<"," <<DPiso_EF.total_time<<"," <<KF.total_time<<","<<LDF.enumOutput.embedding_cnt<<","<<LDF_EF.enumOutput.embedding_cnt
+        <<","<<NLF.enumOutput.embedding_cnt<<","<<NLF_EF.enumOutput.embedding_cnt<<","<<GQL.enumOutput.embedding_cnt
+        <<","<<GQL_EF.enumOutput.embedding_cnt<<","<<TSOF.enumOutput.embedding_cnt<<","<<TSOF_EF.enumOutput.embedding_cnt<<","<<CFL.enumOutput.embedding_cnt
+        <<","<<CFL_EF.enumOutput.embedding_cnt<<","<<DPiso.enumOutput.embedding_cnt<<","<<DPiso_EF.enumOutput.embedding_cnt<<","<<KF.enumOutput.embedding_cnt
+        <<","<<LDF.candidate_count_sum<<","<<LDF.enumOutput.candidate_true_count_sum<<","<<LDF_EF.candidate_count_sum<<","<<LDF_EF.enumOutput.candidate_true_count_sum
+        <<","<<NLF.candidate_count_sum<<","<<NLF.enumOutput.candidate_true_count_sum<<","<<NLF_EF.candidate_count_sum<<","<<NLF_EF.enumOutput.candidate_true_count_sum
+        <<","<<GQL.candidate_count_sum<<","<<GQL.enumOutput.candidate_true_count_sum<<","<<GQL_EF.candidate_count_sum<<","<<GQL_EF.enumOutput.candidate_true_count_sum
+        <<","<<TSOF.candidate_count_sum<<","<<TSOF.enumOutput.candidate_true_count_sum<<","<<TSOF_EF.candidate_count_sum<<","<<TSOF_EF.enumOutput.candidate_true_count_sum
+        <<","<<CFL.candidate_count_sum<<","<<CFL.enumOutput.candidate_true_count_sum<<","<<CFL_EF.candidate_count_sum<<","<<CFL_EF.enumOutput.candidate_true_count_sum
+        <<","<<DPiso.candidate_count_sum<<","<<DPiso.enumOutput.candidate_true_count_sum<<","<<DPiso_EF.candidate_count_sum<<","<<DPiso_EF.enumOutput.candidate_true_count_sum
+        <<","<<KF.candidate_count_sum<<","<<KF.enumOutput.candidate_true_count_sum;
 
-        std::string var = oss.str();
+    std::string var = oss.str();
 
-        cout<<var<<endl;
+    cout<<var<<endl;
 
-        string file_path = "";
-        if(property=="sparse"){
-            file_path = "performance_experiment/"+dataset+"_"+"s"+querysize+".csv";
-        }
-        if(property=="dense"){
-            file_path = "performance_experiment/"+dataset+"_"+"d"+querysize+".csv";
-        }
-
-        std::ofstream myfile;
-        myfile.open (file_path,std::ios_base::app);
-        myfile<<var<<"\n";
-        myfile.close();
+    string file_path = "";
+    if(property=="sparse"){
+        file_path = "performance_experiment/"+dataset+"_"+"s"+querysize+".csv";
+    }
+    if(property=="dense"){
+        file_path = "performance_experiment/"+dataset+"_"+"d"+querysize+".csv";
     }
 
+    std::ofstream myfile;
+    myfile.open (file_path,std::ios_base::app);
+    myfile<<var<<"\n";
+    myfile.close();
 
 }
 
@@ -114,13 +111,15 @@ int main(int argc, char** argv) {
     MatchingCommand command(argc,argv);
     string dataset_name = command.getDatasetName();
     string query_size = command.getQuerySize();
+    string query_number = command.getQueryNumber();
     string query_property = command.getQueryProperty();
 
-    cout<<dataset_name;
-    cout<<query_size;
-    cout<<query_property;
+    cout<<dataset_name<<endl;
+    cout<<query_size<<endl;
+    cout<<query_number<<endl;
+    cout<<query_property<<endl;
 
-    exact_eval(query_size,dataset_name,query_property);
+    exact_eval(dataset_name,query_size,query_number,query_property);
 
     return 0;
 

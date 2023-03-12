@@ -25,11 +25,14 @@ MatchingCommand::MatchingCommand(const int argc, char **argv) : CommandParser(ar
     options_key[OptionKeyword::TopSEigen] = "-tops";
     options_key[OptionKeyword::Dataset] = "-dataset";    //dataset name
     options_key[OptionKeyword::QuerySize] = "-qsize";
+    options_key[OptionKeyword::QueryNumber] = "-qnumber";
     options_key[OptionKeyword::QueryProperty] = "-qprop";
     processOptions();
 };
 
 void MatchingCommand::processOptions() {
+
+    options_value[OptionKeyword::QueryNumber] = getCommandOption(options_key[OptionKeyword::QueryNumber]);
 
     options_value[OptionKeyword::QuerySize] = getCommandOption(options_key[OptionKeyword::QuerySize]);
 

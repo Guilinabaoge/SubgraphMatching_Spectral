@@ -184,7 +184,7 @@ matching_algo_outputs Experiments::experiment3(const string data_graph_path,cons
     inputs.dgraph_path = data_graph_path;
     inputs.qgraph_path = query_graph_path;
     inputs.filter = filter;
-    inputs.order = "RI";
+    inputs.order = "GQL";
     inputs.engine = "LFTJ";
     inputs.eigen = eigen;
 

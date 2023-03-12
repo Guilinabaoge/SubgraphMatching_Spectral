@@ -29,6 +29,8 @@ enum OptionKeyword {
     Dataset =17,                    // name of the dataset
     QuerySize = 18,
     QueryProperty = 19,
+    QueryNumber = 20,
+
 };
 
 class MatchingCommand : public CommandParser{
@@ -41,6 +43,10 @@ private:
 
 public:
     MatchingCommand(int argc, char **argv);
+
+    std::string getQueryNumber(){
+        return options_value[OptionKeyword::QueryNumber];
+    }
 
     std::string getQuerySize() {
         return options_value[OptionKeyword::QuerySize];
