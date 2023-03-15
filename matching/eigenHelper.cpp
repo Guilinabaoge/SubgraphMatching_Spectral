@@ -10,6 +10,7 @@
 #include <set>
 #include <unordered_map>
 #include <unordered_set>
+#include <Eigen/Eigenvalues>
 // #include "GrM.h"
 #include "eigenHelper.h"
 #include "thread"
@@ -216,54 +217,29 @@ void ExtractAdL(SparseMatrix<double> &M, Graph *data_graph, int degree, int dept
     }
 }
 
-void calcEigens1(SparseMatrix<double> M, int k, VectorXd &evalues, int count)
-{
-    int sizek = k * 2;
+void calcEigens1(SparseMatrix<double> M, int k, VectorXd &evalues, int count){
+    int sizek = k*2;
     int dek = k;
-
-    if (count == 0 || count == 1)
-    {
-        evalues.resize(dek);
-
-        evalues(0) = 1;
-        for (int i = 1; i < dek; i++)
-            evalues(i) = 0;
-
-        return;
+    SelfAdjointEigenSolver<SparseMatrix<double>> eigensolver(M);
+    if (eigensolver.info() != Success) {
+        std::cerr << "Eigenvalue computation failed!" << std::endl;
+        //return 1;
     }
+    VectorXd eigenvalues = eigensolver.eigenvalues();
 
-    if (k >= count)
-        k = count - 1;
-
-    SparseGenMatProd<double> op(M);
-    SymEigsSolver<SparseGenMatProd<double>> eigs(op, k, count);
-    eigs.init();
-    int nconv = eigs.compute(SortRule::LargestAlge);
-
-    if (eigs.info() == CompInfo::Successful)
-        evalues = eigs.eigenvalues();
-    if (eigs.info() != CompInfo::Successful)
+    if (eigenvalues.size() < k)
     {
-        int info = static_cast<int>(eigs.info());
-        cout << "problem No Eigs" << endl;
-        cout << info;
-        checkM(M);
-        // cout<<count<<endl;
-        // cout<<k<<endl;
-        // printSM(M);
-        evalues.resize(k);
-        for (int ss = 0; ss < k; ss++)
-            evalues(ss) = count;
-    }
-
-    if (evalues.size() < dek)
-    {
+        evalues = eigenvalues.tail(eigenvalues.size()).reverse();
         int sz = evalues.size();
         evalues.conservativeResize(dek);
         evalues(sz) = 0;
         sz++;
         for (int i = sz; i < dek; i++)
             evalues(i) = -1;
+    }
+    else{
+        evalues = eigenvalues.tail(k).reverse();
+
     }
 }
 
