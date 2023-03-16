@@ -328,6 +328,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
         GenerateQueryPlan::generateQSIQueryPlan(data_graph, query_graph, edge_matrix, matching_order, pivots);
     } else if (input_order_type == "GQL") {
         GenerateQueryPlan::generateGQLQueryPlan(data_graph, query_graph, candidates_count, matching_order, pivots);
+
     } else if (input_order_type == "TSO") {
         if (tso_tree == NULL) {
             GenerateFilteringPlan::generateTSOFilterPlan(data_graph, query_graph, tso_tree, tso_order,top_s);

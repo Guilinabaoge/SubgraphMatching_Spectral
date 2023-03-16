@@ -42,6 +42,7 @@ void GenerateQueryPlan::generateGQLQueryPlan(const Graph *data_graph, const Grap
           }
           updateValidVertices(query_graph, next_vertex, visited_vertices, adjacent_vertices);
           order[i] = next_vertex;
+
      }
 
      // Pick a pivot randomly.

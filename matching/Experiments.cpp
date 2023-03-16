@@ -189,21 +189,29 @@ matching_algo_outputs Experiments::experiment3(const string data_graph_path,cons
     inputs.eigen = eigen;
 
     matching_algo_outputs outputs = StudyPerformance::solveGraphQuery(inputs);
+//
+//    cout<<"candidate true sum: "<<outputs.enumOutput.candidate_true_count_sum<<endl;
+//    cout<<"candidate sum: "<<outputs.candidate_count_sum<<endl;
+//    cout<<"embedding count: "<<outputs.enumOutput.embedding_cnt<<endl;
 
-    cout<<"candidate true sum: "<<outputs.enumOutput.candidate_true_count_sum<<endl;
-    cout<<"candidate sum: "<<outputs.candidate_count_sum<<endl;
-    cout<<"embedding count: "<<outputs.enumOutput.embedding_cnt<<endl;
-    cout<<"enumeration time: "<<outputs.enumeration_time<<endl;
-    cout<<"preprocessing time: "<<outputs.preprocessing_time<<endl;
-    cout<<"matching order: ";
+
+//    cout<<"matching order: ";
 //    for (int i=0; i<outputs.query_size;i++){
 //        cout<<outputs.matching_order[i]<<" ";
 //    }
 //    cout<<" "<<endl;
     if(stoi(eigen)){
-        cout<<filter<<" With eigen filter total time "<<outputs.total_time<<endl;
+        cout<<filter<<" With eigen filter total time "<<outputs.total_time<<" enumeration time: "<<outputs.enumeration_time<<" preprocessing time: "<<outputs.preprocessing_time<<" matching order: ";
+        for (int i=0; i<outputs.query_size;i++){
+            cout<<outputs.matching_order[i]<<" ";
+        }
+        cout<<" "<<endl;
     } else{
-        cout<<filter<<" No eigen filter total time "<<outputs.total_time<<endl;
+        cout<<filter<<" No eigen filter total time "<<outputs.total_time<<" enumeration time: "<<outputs.enumeration_time<<" preprocessing time: "<<outputs.preprocessing_time<<" matching order: ";
+        for (int i=0; i<outputs.query_size;i++){
+            cout<<outputs.matching_order[i]<<" ";
+        }
+        cout<<" "<<endl;
     }
 
     return outputs;
