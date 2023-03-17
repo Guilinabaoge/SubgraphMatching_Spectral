@@ -176,7 +176,7 @@ void Experiments::experiment2(string data_graph_path,string query_graph_path,str
 }
 
 //This experiment compare the overall performance of each algorithm with and without eigen value enhanced filter.
-matching_algo_outputs Experiments::experiment3(const string data_graph_path,const string query_graph_path,const string filter,const string eigen) {
+matching_algo_outputs Experiments::experiment3(const string data_graph_path,const string query_graph_path,const string filter,const string eigen,ui* order_pointer) {
 
 //    string filters[6] = {"LDF","NLF","GQL","TSO","CFL","DPiso"};
 
@@ -184,9 +184,11 @@ matching_algo_outputs Experiments::experiment3(const string data_graph_path,cons
     inputs.dgraph_path = data_graph_path;
     inputs.qgraph_path = query_graph_path;
     inputs.filter = filter;
-    inputs.order = "GQL";
+    inputs.order = "RI";
     inputs.engine = "LFTJ";
     inputs.eigen = eigen;
+    inputs.order_pointer = order_pointer;
+
 
     matching_algo_outputs outputs = StudyPerformance::solveGraphQuery(inputs);
 //

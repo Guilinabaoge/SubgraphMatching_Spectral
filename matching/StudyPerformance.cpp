@@ -108,7 +108,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     std::string input_filter_type = inputs.filter;
     std::string input_order_type = inputs.order;
     std::string input_engine_type = inputs.engine;
-    std::string input_max_embedding_num = "5000000000";
+    std::string input_max_embedding_num = "500000000";
     std::string input_time_limit = "300";
     std::string input_order_num = command.getOrderNum();
     std::string input_distribution_file_path = command.getDistributionFilePath();
@@ -205,6 +205,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     bool isEigenCheck;
     int top_s = std::stoi( input_tops);
     istringstream(input_iseigen) >> isEigenCheck;
+
 
 
     ui** candidates = NULL;
@@ -327,7 +328,16 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     if (input_order_type == "QSI") {
         GenerateQueryPlan::generateQSIQueryPlan(data_graph, query_graph, edge_matrix, matching_order, pivots);
     } else if (input_order_type == "GQL") {
-        GenerateQueryPlan::generateGQLQueryPlan(data_graph, query_graph, candidates_count, matching_order, pivots);
+
+        if (inputs.order_pointer == NULL){
+            GenerateQueryPlan::generateGQLQueryPlan(data_graph, query_graph, candidates_count, matching_order, pivots);
+
+        }
+        else {
+            GenerateQueryPlan::GQLorderfake(data_graph, query_graph, candidates_count, inputs.order_pointer, pivots);
+        }
+
+
 
     } else if (input_order_type == "TSO") {
         if (tso_tree == NULL) {
@@ -370,7 +380,15 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     double generate_query_plan_time_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
     if (input_order_type != "Spectrum") {
-        GenerateQueryPlan::checkQueryPlanCorrectness(query_graph, matching_order, pivots);
+
+        if (inputs.order_pointer == NULL){
+            GenerateQueryPlan::checkQueryPlanCorrectness(query_graph, matching_order, pivots);
+
+        }
+        else {
+            GenerateQueryPlan::checkQueryPlanCorrectness(query_graph, inputs.order_pointer, pivots);
+        }
+
 #ifdef PRINT1
         GenerateQueryPlan::printSimplifiedQueryPlan(query_graph, matching_order);
 #endif
@@ -388,9 +406,23 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
 #endif
 
     //Add the matching order into return struct
-    for(int i =0; i<outputs.query_size;i++){
-        outputs.matching_order.push_back(matching_order[i]);
+    if(inputs.order_pointer == NULL){
+        for(int i =0; i<outputs.query_size;i++){
+            outputs.matching_order.push_back(matching_order[i]);
+            outputs.matching_order_string.append(to_string(matching_order[i])+"-");
+        }
+        outputs.matching_order_string.pop_back();
     }
+    else {
+        for(int i =0; i<outputs.query_size;i++){
+            outputs.matching_order.push_back(inputs.order_pointer[i]);
+            outputs.matching_order_string.append(to_string(inputs.order_pointer[i])+"-");
+        }
+        outputs.matching_order_string.pop_back();
+    }
+
+
+
 
 
     size_t output_limit = 0;
@@ -419,9 +451,14 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
                                                       candidates_count, matching_order, pivots, output_limit, call_count);
     } else if (input_engine_type == "LFTJ") {
 
+        if(inputs.order_pointer == NULL){
+            s = EvaluateQuery::LFTJ(data_graph, query_graph, edge_matrix, candidates, candidates_count,
+                                    matching_order, output_limit, call_count);
+        }else{
+            s = EvaluateQuery::LFTJ(data_graph, query_graph, edge_matrix, candidates, candidates_count,
+                                    inputs.order_pointer, output_limit, call_count);
+        }
 
-        s = EvaluateQuery::LFTJ(data_graph, query_graph, edge_matrix, candidates, candidates_count,
-                                           matching_order, output_limit, call_count);
 
         embedding_count = s.embedding_cnt;
 
@@ -541,6 +578,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     printf("Per Call Count Time (nanoseconds): %.4lf\n", enumeration_time_in_ns / (call_count == 0 ? 1 : call_count));
     std::cout << "End." << std::endl;
 #endif
+
     return outputs;
 }
 

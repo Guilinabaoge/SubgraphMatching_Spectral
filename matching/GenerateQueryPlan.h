@@ -40,6 +40,8 @@ public:
     static void printQueryPlan(const Graph* query_graph, ui* order);
 
     static void printSimplifiedQueryPlan(const Graph* query_graph, ui* order);
+
+    static void GQLorderfake(const Graph *data_graph, const Graph *query_graph, ui *candidates_count, ui *&order, ui *&pivot);
 private:
     static VertexID selectGQLStartVertex(const Graph *query_graph, ui *candidates_count);
     static std::pair<VertexID, VertexID> selectQSIStartEdge(const Graph *query_graph, Edges ***edge_matrix);
@@ -59,6 +61,8 @@ private:
 
     static ui generateNoneTreeEdgesCount(const Graph *query_graph, TreeNode *tree_node, std::vector<ui> &path);
     static void updateValidVertices(const Graph* query_graph, VertexID query_vertex, std::vector<bool>& visited, std::vector<bool>& adjacent);
+
+
 };
 
 

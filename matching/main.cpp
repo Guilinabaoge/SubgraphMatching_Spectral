@@ -37,34 +37,96 @@ void exact_eval(string dataset,string querysize,string querynumber,string proper
     meta.query_path = query.str();
 
 
-    matching_algo_outputs LDF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"LDF","0");
-    matching_algo_outputs LDF_EF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"LDF","1");
-    matching_algo_outputs NLF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"NLF","0");
-    matching_algo_outputs NLF_EF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"NLF","1");
-    matching_algo_outputs GQL = Experiments::experiment3(meta.data_graph_path,meta.query_path,"GQL","0");
-    matching_algo_outputs GQL_EF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"GQL","1");
-    matching_algo_outputs TSOF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"TSO","0");
-    matching_algo_outputs TSOF_EF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"TSO","1");
-    matching_algo_outputs CFL = Experiments::experiment3(meta.data_graph_path,meta.query_path,"CFL","0");
-    matching_algo_outputs CFL_EF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"CFL","1");
-    matching_algo_outputs DPiso = Experiments::experiment3(meta.data_graph_path,meta.query_path,"DPiso","0");
-    matching_algo_outputs DPiso_EF =Experiments::experiment3(meta.data_graph_path,meta.query_path,"DPiso","1");
-    matching_algo_outputs KF =Experiments::experiment3(meta.data_graph_path,meta.query_path,"KF","0");
+    matching_algo_outputs LDF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"LDF","0",NULL);
+    ui* fake_pointer = new ui[stoi(meta.query_size)];
+    for (int i =0; i<stoi(meta.query_size);i++){
+        ui order = LDF.matching_order[i];
+        *&fake_pointer[i] = order;
+    }
+    matching_algo_outputs LDF_EF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"LDF","1",fake_pointer);
+    delete[] fake_pointer;
+
+    matching_algo_outputs NLF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"NLF","0",NULL);
+    ui* fake_pointer2 = new ui[stoi(meta.query_size)];
+    for (int i =0; i<stoi(meta.query_size);i++){
+        ui order = NLF.matching_order[i];
+        *&fake_pointer2[i] = order;
+    }
+    matching_algo_outputs NLF_EF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"NLF","1",fake_pointer2);
+    delete[] fake_pointer2;
+
+
+    matching_algo_outputs GQL = Experiments::experiment3(meta.data_graph_path,meta.query_path,"GQL","0",NULL);
+    ui* fake_pointer3 = new ui[stoi(meta.query_size)];
+    for (int i =0; i<stoi(meta.query_size);i++){
+        ui order = GQL.matching_order[i];
+        *&fake_pointer3[i] = order;
+    }
+    matching_algo_outputs GQL_EF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"GQL","1",fake_pointer3);
+    delete[] fake_pointer3;
+
+
+    matching_algo_outputs TSOF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"TSO","0",NULL);
+    ui* fake_pointer4 = new ui[stoi(meta.query_size)];
+    for (int i =0; i< stoi(meta.query_size);i++){
+        ui order = TSOF.matching_order[i];
+        *&fake_pointer4[i] = order;
+    }
+    matching_algo_outputs TSOF_EF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"TSO","1",fake_pointer4);
+    delete[] fake_pointer4;
+
+
+    matching_algo_outputs CFL = Experiments::experiment3(meta.data_graph_path,meta.query_path,"CFL","0",NULL);
+    ui* fake_pointer5 = new ui[stoi(meta.query_size)];
+    for (int i =0; i< stoi(meta.query_size);i++){
+        ui order = CFL.matching_order[i];
+        *&fake_pointer5[i] = order;
+    }
+    matching_algo_outputs CFL_EF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"CFL","1",fake_pointer5);
+    delete[] fake_pointer5;
+
+
+    matching_algo_outputs DPiso = Experiments::experiment3(meta.data_graph_path,meta.query_path,"DPiso","0",NULL);
+    ui* fake_pointer6 = new ui[stoi(meta.query_size)];
+    for (int i =0; i< stoi(meta.query_size);i++){
+        ui order = DPiso.matching_order[i];
+        *&fake_pointer6[i] = order;
+    }
+    matching_algo_outputs DPiso_EF = Experiments::experiment3(meta.data_graph_path,meta.query_path,"DPiso","1",fake_pointer6);
+    delete[] fake_pointer6;
+
+    matching_algo_outputs KF =Experiments::experiment3(meta.data_graph_path,meta.query_path,"KF","0",NULL);
 
     std::ostringstream oss;
     oss <<meta.query_property<<"_"<<meta.query_size<<"_"<<meta.query_number<<"," <<LDF.total_time<<"," <<LDF_EF.total_time
         <<","<<NLF.total_time<<"," <<NLF_EF.total_time<<","<<GQL.total_time<<"," <<GQL_EF.total_time<<"," <<TSOF.total_time<<"," <<TSOF_EF.total_time<<"," <<CFL.total_time
-        <<"," <<CFL_EF.total_time<<","<<DPiso.total_time<<"," <<DPiso_EF.total_time<<"," <<KF.total_time<<","<<LDF.enumOutput.embedding_cnt<<","<<LDF_EF.enumOutput.embedding_cnt
-        <<","<<NLF.enumOutput.embedding_cnt<<","<<NLF_EF.enumOutput.embedding_cnt<<","<<GQL.enumOutput.embedding_cnt
-        <<","<<GQL_EF.enumOutput.embedding_cnt<<","<<TSOF.enumOutput.embedding_cnt<<","<<TSOF_EF.enumOutput.embedding_cnt<<","<<CFL.enumOutput.embedding_cnt
-        <<","<<CFL_EF.enumOutput.embedding_cnt<<","<<DPiso.enumOutput.embedding_cnt<<","<<DPiso_EF.enumOutput.embedding_cnt<<","<<KF.enumOutput.embedding_cnt
-        <<","<<LDF.candidate_count_sum<<","<<LDF.enumOutput.candidate_true_count_sum<<","<<LDF_EF.candidate_count_sum<<","<<LDF_EF.enumOutput.candidate_true_count_sum
-        <<","<<NLF.candidate_count_sum<<","<<NLF.enumOutput.candidate_true_count_sum<<","<<NLF_EF.candidate_count_sum<<","<<NLF_EF.enumOutput.candidate_true_count_sum
-        <<","<<GQL.candidate_count_sum<<","<<GQL.enumOutput.candidate_true_count_sum<<","<<GQL_EF.candidate_count_sum<<","<<GQL_EF.enumOutput.candidate_true_count_sum
-        <<","<<TSOF.candidate_count_sum<<","<<TSOF.enumOutput.candidate_true_count_sum<<","<<TSOF_EF.candidate_count_sum<<","<<TSOF_EF.enumOutput.candidate_true_count_sum
-        <<","<<CFL.candidate_count_sum<<","<<CFL.enumOutput.candidate_true_count_sum<<","<<CFL_EF.candidate_count_sum<<","<<CFL_EF.enumOutput.candidate_true_count_sum
-        <<","<<DPiso.candidate_count_sum<<","<<DPiso.enumOutput.candidate_true_count_sum<<","<<DPiso_EF.candidate_count_sum<<","<<DPiso_EF.enumOutput.candidate_true_count_sum
-        <<","<<KF.candidate_count_sum<<","<<KF.enumOutput.candidate_true_count_sum;
+        <<"," <<CFL_EF.total_time<<","<<DPiso.total_time<<"," <<DPiso_EF.total_time<<"," <<KF.total_time<<","<<LDF.enumOutput.embedding_cnt
+        <<","<<LDF.candidate_count_sum
+        <<","<<LDF_EF.candidate_count_sum
+        <<","<<NLF.candidate_count_sum
+        <<","<<NLF_EF.candidate_count_sum
+        <<","<<GQL.candidate_count_sum
+        <<","<<GQL_EF.candidate_count_sum
+        <<","<<TSOF.candidate_count_sum
+        <<","<<TSOF_EF.candidate_count_sum
+        <<","<<CFL.candidate_count_sum
+        <<","<<CFL_EF.candidate_count_sum
+        <<","<<DPiso.candidate_count_sum
+        <<","<<DPiso_EF.candidate_count_sum
+        <<","<<KF.matching_order_string
+        <<","<<LDF.matching_order_string
+        <<","<<LDF_EF.matching_order_string
+        <<","<<NLF.matching_order_string
+        <<","<<NLF_EF.matching_order_string
+        <<","<<GQL.matching_order_string
+        <<","<<GQL_EF.matching_order_string
+        <<","<<TSOF.matching_order_string
+        <<","<<TSOF_EF.matching_order_string
+        <<","<<CFL.matching_order_string
+        <<","<<CFL_EF.matching_order_string
+        <<","<<DPiso.matching_order_string
+        <<","<<DPiso_EF.matching_order_string
+        <<","<<KF.matching_order_string;
 
     std::string var = oss.str();
 

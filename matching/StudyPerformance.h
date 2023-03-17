@@ -19,6 +19,7 @@ struct matching_algo_inputs {
     string order;
     string engine;
     string eigen;
+    ui* order_pointer;
 };
 
 struct matching_algo_outputs{
@@ -30,6 +31,8 @@ struct matching_algo_outputs{
     double preprocessing_time;
     double enumeration_time;
     vector<ui> matching_order;
+    string matching_order_string;
+    ui* order_pointer = NULL;
 };
 
 class StudyPerformance{

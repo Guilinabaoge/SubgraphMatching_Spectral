@@ -10,6 +10,37 @@
 #include <algorithm>
 #include <utility/graphoperations.h>
 
+void GenerateQueryPlan::GQLorderfake(const Graph *data_graph, const Graph *query_graph, ui *candidates_count,
+                                             ui *&order, ui *&pivot) {
+    /**
+     * Select the vertex v such that (1) v is adjacent to the selected vertices; and (2) v has the minimum number of candidates.
+     */
+    std::vector<bool> visited_vertices(query_graph->getVerticesCount(), false);
+    std::vector<bool> adjacent_vertices(query_graph->getVerticesCount(), false);
+//    order = new ui[query_graph->getVerticesCount()];
+    pivot = new ui[query_graph->getVerticesCount()];
+
+//    VertexID start_vertex = selectGQLStartVertex(query_graph, candidates_count);
+//    order[0] = start_vertex;
+    updateValidVertices(query_graph, order[0], visited_vertices, adjacent_vertices);
+
+    for (ui i = 1; i < query_graph->getVerticesCount(); ++i) {
+        updateValidVertices(query_graph, order[i], visited_vertices, adjacent_vertices);
+    }
+
+    // Pick a pivot randomly.
+    for (ui i = 1; i < query_graph->getVerticesCount(); ++i) {
+        VertexID u = order[i];
+        for (ui j = 0; j < i; ++j) {
+            VertexID cur_vertex = order[j];
+            if (query_graph->checkEdgeExistence(u, cur_vertex)) {
+                pivot[i] = cur_vertex;
+                break;
+            }
+        }
+    }
+}
+
 void GenerateQueryPlan::generateGQLQueryPlan(const Graph *data_graph, const Graph *query_graph, ui *candidates_count,
                                              ui *&order, ui *&pivot) {
      /**
