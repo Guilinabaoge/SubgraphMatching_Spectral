@@ -184,24 +184,14 @@ matching_algo_outputs Experiments::experiment3(const string data_graph_path,cons
     inputs.dgraph_path = data_graph_path;
     inputs.qgraph_path = query_graph_path;
     inputs.filter = filter;
-    inputs.order = "RI";
+    inputs.order = "GQL";
     inputs.engine = "LFTJ";
     inputs.eigen = eigen;
     inputs.order_pointer = order_pointer;
 
 
     matching_algo_outputs outputs = StudyPerformance::solveGraphQuery(inputs);
-//
-//    cout<<"candidate true sum: "<<outputs.enumOutput.candidate_true_count_sum<<endl;
-//    cout<<"candidate sum: "<<outputs.candidate_count_sum<<endl;
-//    cout<<"embedding count: "<<outputs.enumOutput.embedding_cnt<<endl;
 
-
-//    cout<<"matching order: ";
-//    for (int i=0; i<outputs.query_size;i++){
-//        cout<<outputs.matching_order[i]<<" ";
-//    }
-//    cout<<" "<<endl;
     if(stoi(eigen)){
         cout<<filter<<" With eigen filter total time "<<outputs.total_time<<" enumeration time: "<<outputs.enumeration_time<<" preprocessing time: "<<outputs.preprocessing_time<<" matching order: ";
         for (int i=0; i<outputs.query_size;i++){
