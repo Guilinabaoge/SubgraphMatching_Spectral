@@ -347,14 +347,8 @@ EvaluateQuery::LFTJ(const Graph *data_graph, const Graph *query_graph, Edges ***
 #endif
 
             if (cur_depth == max_depth - 1) {
-//                cout<<embedding_cnt<<endl;
                 embedding_cnt += 1;
                 visited_vertices[v] = false;
-
-                //TODO ruined the performance here?
-//                for (int i = 0; i<max_depth;i++){
-//                    s.candidate_true[i].insert(embedding[i]);
-//                }
 
 
 #ifdef DISTRIBUTION
@@ -377,7 +371,6 @@ EvaluateQuery::LFTJ(const Graph *data_graph, const Graph *query_graph, Edges ***
                 idx[cur_depth] = 0;
                 generateValidCandidateIndex(cur_depth, idx_embedding, idx_count, valid_candidate_idx, edge_matrix, bn,
                                             bn_count, order, temp_buffer);
-
 
 #ifdef ENABLE_FAILING_SET
                 if (idx_count[cur_depth] == 0) {

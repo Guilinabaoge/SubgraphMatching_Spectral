@@ -73,10 +73,18 @@ void exact_eval(string dataset,string querysize,string querynumber,string proper
 
     std::ostringstream oss;
     oss <<meta.query_property<<"_"<<meta.query_size<<"_"<<meta.query_number;
+
+    for(auto &eval : evaluations){
+        oss<<","<<eval.first.call_count<<","<<eval.second.call_count;
+    }
+    oss<<","<<KF.call_count
+    <<","<<LDF.first.enumOutput.embedding_cnt;
+
     for(auto &eval : evaluations){
         oss<<","<<eval.first.total_time<<","<<eval.second.total_time;
     }
     oss<<","<<KF.total_time<<","<<LDF.first.enumOutput.embedding_cnt;
+
     for(auto &eval : evaluations){
         oss<<","<<eval.first.candidate_count_sum<<","<<eval.second.candidate_count_sum;
     }

@@ -108,7 +108,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     std::string input_filter_type = inputs.filter;
     std::string input_order_type = inputs.order;
     std::string input_engine_type = inputs.engine;
-    std::string input_max_embedding_num = "5000000000";
+    std::string input_max_embedding_num = "5000000";
     std::string input_time_limit = "300";
     std::string input_order_num = command.getOrderNum();
     std::string input_distribution_file_path = command.getDistributionFilePath();
@@ -461,6 +461,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
 
 
         embedding_count = s.embedding_cnt;
+        outputs.call_count = call_count;
 
 
     } else if (input_engine_type == "GQL") {

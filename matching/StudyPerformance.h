@@ -33,6 +33,8 @@ struct matching_algo_outputs{
     vector<ui> matching_order;
     string matching_order_string;
     ui* order_pointer = NULL;
+    size_t call_count;
+
 };
 
 class StudyPerformance{
