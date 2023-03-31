@@ -367,7 +367,6 @@ EvaluateQuery::LFTJ(const Graph *data_graph, const Graph *query_graph, Edges ***
             } else {
                 call_count += 1;
                 cur_depth += 1;
-
                 idx[cur_depth] = 0;
                 generateValidCandidateIndex(cur_depth, idx_embedding, idx_count, valid_candidate_idx, edge_matrix, bn,
                                             bn_count, order, temp_buffer);

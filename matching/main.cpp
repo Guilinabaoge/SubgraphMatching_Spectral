@@ -50,8 +50,9 @@ void exact_eval(string dataset,string querysize,string querynumber,string proper
     meta.data_graph_path = data.str();
 
     std::ostringstream query;
-    query << "../../test/reallife_dataset/" << meta.dataset << "/query_graph/query_" << meta.query_property << "_"
-          << meta.query_size << "_" << meta.query_number << ".graph";
+//    query << "../../test/reallife_dataset/" << meta.dataset << "/query_graph/query_" << meta.query_property << "_"
+//          << meta.query_size << "_" << meta.query_number << ".graph";
+    query<<"../../test/large_query/test.graph";
     meta.query_path = query.str();
 
     pair <matching_algo_outputs,matching_algo_outputs> LDF = fakeMatchingWrapper(meta,"LDF");
@@ -102,38 +103,6 @@ void exact_eval(string dataset,string querysize,string querynumber,string proper
     }
     oss<<","<<KF.enumeration_time;
 
-//    oss <<meta.query_property<<"_"<<meta.query_size<<"_"<<meta.query_number<<"," <<LDF.first.total_time<<"," <<LDF.second.total_time
-//        <<","<<NLF.first.total_time<<"," <<NLF.second.total_time<<","<<GQL.first.total_time<<"," <<GQL.second.total_time<<"," <<TSOF.first.total_time
-//        <<"," <<TSOF.second.total_time<<"," <<CFL.first.total_time
-//        <<"," <<CFL.second.total_time<<","<<DPiso.first.total_time
-//        <<"," <<DPiso.second.total_time<<"," <<KF.total_time
-//        <<","<<LDF.first.enumOutput.embedding_cnt
-//        <<","<<LDF.first.candidate_count_sum
-//        <<","<<LDF.second.candidate_count_sum
-//        <<","<<NLF.first.candidate_count_sum
-//        <<","<<NLF.second.candidate_count_sum
-//        <<","<<GQL.first.candidate_count_sum
-//        <<","<<GQL.second.candidate_count_sum
-//        <<","<<TSOF.first.candidate_count_sum
-//        <<","<<TSOF.second.candidate_count_sum
-//        <<","<<CFL.first.candidate_count_sum
-//        <<","<<CFL.second.candidate_count_sum
-//        <<","<<DPiso.first.candidate_count_sum
-//        <<","<<DPiso.second.candidate_count_sum
-//        <<","<<KF.matching_order_string
-//        <<","<<LDF.first.matching_order_string
-//        <<","<<LDF.second.matching_order_string
-//        <<","<<NLF.first.matching_order_string
-//        <<","<<NLF.second.matching_order_string
-//        <<","<<GQL.first.matching_order_string
-//        <<","<<GQL.second.matching_order_string
-//        <<","<<TSOF.first.matching_order_string
-//        <<","<<TSOF.second.matching_order_string
-//        <<","<<CFL.first.matching_order_string
-//        <<","<<CFL.second.matching_order_string
-//        <<","<<DPiso.first.matching_order_string
-//        <<","<<DPiso.second.matching_order_string
-//        <<","<<KF.matching_order_string;
 
     std::string var = oss.str();
 
@@ -165,8 +134,8 @@ void generate_datagraph_eigenvector(string data_graph_path,string csvfilename){
 
 }
 
+void fixed_order_experiment(int argc, char** argv){
 
-int main(int argc, char** argv) {
     //    generate_datagraph_eigenvector("../../test/reallife_dataset/eu2005/data_graph/eu2005.graph","eu2005.csv");
 
     //yeast,hprd,uspatents,youtube,dblp,eu2005,
@@ -190,6 +159,17 @@ int main(int argc, char** argv) {
 
     exact_eval(dataset_name,query_size,query_number,query_property);
 
+}
+
+int main(int argc, char** argv) {
+    Experiments::datagraphEigenMatrix = "wordnet.csv";
+    string datagraph = "../../test/reallife_dataset/wordnet/data_graph/wordnet.graph";
+    string querygraph = "../../test/large_query/test.graph";
+//    string querygraph = "../../test/reallife_dataset/wordnet/query_graph/query_dense_16_1.graph";
+//    matching_algo_outputs LDF = Experiments::experiment3(datagraph,querygraph,"LDF","0",NULL);
+//    matching_algo_outputs LDF_EF = Experiments::experiment3(datagraph,querygraph,"LDF","1",NULL);
+    matching_algo_outputs GQL = Experiments::experiment3(datagraph,querygraph,"GQL","0",NULL);
+//    matching_algo_outputs GQL_EF = Experiments::experiment3(datagraph,querygraph,"GQL","1",NULL);
     return 0;
 
 }
