@@ -36,6 +36,14 @@ pair<matching_algo_outputs,matching_algo_outputs> fakeMatchingWrapper(queryMeta 
     return pair(original,enhanced);
 }
 
+pair<matching_algo_outputs,matching_algo_outputs> MatchingWrapper(string datagraph,string querygraph,string filter){
+    matching_algo_outputs original = Experiments::experiment3(datagraph,querygraph,filter,"0",NULL);
+    matching_algo_outputs enhanced = Experiments::experiment3(datagraph,querygraph,filter,"1",NULL);
+    return pair(original,enhanced);
+}
+
+
+
 
 void exact_eval(string dataset,string querysize,string querynumber,string property){
     Experiments::datagraphEigenMatrix = dataset+".csv";
@@ -158,18 +166,92 @@ void fixed_order_experiment(int argc, char** argv){
     cout<<query_property<<endl;
 
     exact_eval(dataset_name,query_size,query_number,query_property);
-
 }
 
 int main(int argc, char** argv) {
     Experiments::datagraphEigenMatrix = "wordnet.csv";
-    string datagraph = "../../test/reallife_dataset/wordnet/data_graph/wordnet.graph";
-    string querygraph = "../../test/large_query/test.graph";
+
+
+    //Query_Name,LDF,LDF+EF,NLF,NLF+EF,GQL,GQL+EF,TSOF,TSOF+EF,CFL,CFL+EF,DPiso,DPiso+EF,KF
 //    string querygraph = "../../test/reallife_dataset/wordnet/query_graph/query_dense_16_1.graph";
-//    matching_algo_outputs LDF = Experiments::experiment3(datagraph,querygraph,"LDF","0",NULL);
-//    matching_algo_outputs LDF_EF = Experiments::experiment3(datagraph,querygraph,"LDF","1",NULL);
-    matching_algo_outputs GQL = Experiments::experiment3(datagraph,querygraph,"GQL","0",NULL);
-//    matching_algo_outputs GQL_EF = Experiments::experiment3(datagraph,querygraph,"GQL","1",NULL);
+
+    MatchingCommand command(argc,argv);
+    string dataset_name = command.getDatasetName();
+    string query_size = command.getQuerySize();
+    string query_number = command.getQueryNumber();
+    string query_property = command.getQueryProperty();
+
+    cout<<dataset_name<<endl;
+    cout<<query_size<<endl;
+    cout<<query_number<<endl;
+    cout<<query_property<<endl;
+
+    string datagraph = "../../test/reallife_dataset/wordnet/data_graph/wordnet.graph";
+    string querygraph = "../../test/large_query/"+dataset_name+"/"+query_property+"/"+query_property+"_"+query_number+".graph";
+
+
+
+    pair <matching_algo_outputs,matching_algo_outputs> LDF = MatchingWrapper(datagraph,querygraph,"LDF");
+    pair <matching_algo_outputs,matching_algo_outputs> NLF = MatchingWrapper(datagraph,querygraph,"NLF");
+    pair <matching_algo_outputs,matching_algo_outputs> GQL = MatchingWrapper(datagraph,querygraph,"GQL");
+    pair <matching_algo_outputs,matching_algo_outputs> TSOF = MatchingWrapper(datagraph,querygraph,"TSO");
+    pair <matching_algo_outputs,matching_algo_outputs> CFL = MatchingWrapper(datagraph,querygraph,"CFL");
+    pair <matching_algo_outputs,matching_algo_outputs> DPiso = MatchingWrapper(datagraph,querygraph,"DPiso");
+    matching_algo_outputs KF = Experiments::experiment3(datagraph,querygraph,"KF","0",NULL);
+
+    vector<pair<matching_algo_outputs,matching_algo_outputs>> evaluations;
+    evaluations.push_back(LDF);
+    evaluations.push_back(NLF);
+    evaluations.push_back(GQL);
+    evaluations.push_back(TSOF);
+    evaluations.push_back(CFL);
+    evaluations.push_back(DPiso);
+
+    std::ostringstream oss;
+    oss <<query_property<<"_"<<query_size<<"_"<<query_number;
+
+    for(auto &eval : evaluations){
+        oss<<","<<eval.first.call_count<<","<<eval.second.call_count;
+    }
+    oss<<","<<KF.call_count
+       <<","<<LDF.first.enumOutput.embedding_cnt;
+
+    for(auto &eval : evaluations){
+        oss<<","<<eval.first.total_time<<","<<eval.second.total_time;
+    }
+    oss<<","<<KF.total_time<<","<<LDF.first.enumOutput.embedding_cnt;
+
+    for(auto &eval : evaluations){
+        oss<<","<<eval.first.candidate_count_sum<<","<<eval.second.candidate_count_sum;
+    }
+    oss<<","<<KF.candidate_count_sum;
+    for(auto &eval : evaluations){
+        oss<<","<<eval.first.matching_order_string<<","<<eval.second.matching_order_string;
+    }
+    oss<<","<<KF.matching_order_string;
+    for(auto &eval : evaluations){
+        oss<<","<<eval.first.preprocessing_time<<","<<eval.second.preprocessing_time;
+    }
+    oss<<","<<KF.preprocessing_time;
+    for(auto &eval : evaluations){
+        oss<<","<<eval.first.enumeration_time<<","<<eval.second.enumeration_time;
+    }
+    oss<<","<<KF.enumeration_time;
+
+
+    std::string var = oss.str();
+
+    cout<<var<<endl;
+
+    string file_path = "";
+    file_path = "performance_experiment/"+dataset_name+"_"+query_property+query_size+".csv";
+
+
+    std::ofstream myfile;
+    myfile.open (file_path,std::ios_base::app);
+    myfile<<var<<"\n";
+    myfile.close();
+
     return 0;
 
 }
