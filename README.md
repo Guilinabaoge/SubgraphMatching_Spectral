@@ -1,7 +1,7 @@
 How to run the code: 
 
 In the main function adjust follow parameters: 
-1. Experiments::datagraphEigenMatrix: <the path of eigen matrix for the data graph>
+1. Experiments::datagraphEigenMatrix: ->the path of the eigen matrix for the data graph
 2. datagraph -> datagraph path
 3. querygraph -> querygraph path
 4. file_path -> path where you want to store the experiment result 
