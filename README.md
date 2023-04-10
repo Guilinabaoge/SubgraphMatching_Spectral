@@ -10,7 +10,7 @@ Then compile the code and run with following command:
 ./SubgraphMatching.out -dataset <datasetname> -qsize <query size> -qnumber <query number> -qprop <query property e.g dense>
 
 
-How to interprete the experiment result:
+How to interpret the experiment result:
 * Column[0:1] Query_Name
 * Column[1:14] Iteration count for LDF,LDF+EF,NLF,NLF+EF,GQL,GQL+EF,TSOF,TSOF+EF,CFL,CFL+EF,DPiso,DPiso+EF,KF 
 * Column[14:15] Embedding count
