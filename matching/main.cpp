@@ -169,7 +169,7 @@ void fixed_order_experiment(int argc, char** argv){
 }
 
 int main(int argc, char** argv) {
-    Experiments::datagraphEigenMatrix = "youtube.csv";
+    Experiments::datagraphEigenMatrix = "wordnet.csv";
 
 
     //Query_Name,LDF,LDF+EF,NLF,NLF+EF,GQL,GQL+EF,TSOF,TSOF+EF,CFL,CFL+EF,DPiso,DPiso+EF,KF
@@ -186,11 +186,11 @@ int main(int argc, char** argv) {
     cout<<query_number<<endl;
     cout<<query_property<<endl;
 
-//    string datagraph = "../../test/reallife_dataset/wordnet/data_graph/wordnet.graph";
-//    string querygraph = "../../test/large_query/"+dataset_name+"/"+query_property+"/"+query_property+"_"+query_number+".graph";
+    string datagraph = "../../test/reallife_dataset/wordnet/data_graph/wordnet.graph";
+    string querygraph = "../../test/large_query/"+dataset_name+"/"+query_property+"/"+query_property+"_"+query_number+".graph";
 
-    string datagraph = "../../test/mydataset/youtube/data_graph/youtube.graph";
-    string querygraph = "../../test/mydataset/youtube/query_graph/query_"+query_property+"_"+query_size+"_"+query_number+".graph";
+//    string datagraph = "../../test/mydataset/youtube/data_graph/youtube.graph";
+//    string querygraph = "../../test/mydataset/youtube/query_graph/query_"+query_property+"_"+query_size+"_"+query_number+".graph";
 
 
     pair <matching_algo_outputs,matching_algo_outputs> LDF = MatchingWrapper(datagraph,querygraph,"LDF");
@@ -246,7 +246,7 @@ int main(int argc, char** argv) {
     cout<<var<<endl;
 
     string file_path = "";
-    file_path = "performance_experiment/mydataset_lesslabels/youtube/"+query_property+query_size+".csv";
+    file_path = "performance_experiment/"+dataset_name+"_"+query_property+query_size+".csv";
 
 
     std::ofstream myfile;
