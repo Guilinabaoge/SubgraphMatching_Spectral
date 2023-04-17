@@ -131,13 +131,13 @@ void exact_eval(string dataset,string querysize,string querynumber,string proper
 
 }
 
-void generate_datagraph_eigenvector(string data_graph_path,string csvfilename){
+void generate_datagraph_eigenvector(string data_graph_path,string csvfilename,int size){
     Graph* data_graph = new Graph(true);
     data_graph->loadGraphFromFile(data_graph_path);
 
-    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), 35);
+    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), size);
     cout<<"Start compute eigen value"<<endl;
-    MTcalc12(data_graph,data_graph->getGraphMaxDegree(),datagraph_eigenvalue,true,35);
+    MTcalc12(data_graph,data_graph->getGraphMaxDegree(),datagraph_eigenvalue,true,size);
     saveData(csvfilename, datagraph_eigenvalue);
 
 }
@@ -169,6 +169,7 @@ void fixed_order_experiment(int argc, char** argv){
 }
 
 int main(int argc, char** argv) {
+    generate_datagraph_eigenvector("../../test/reallife_dataset/wordnet/data_graph/wordnet.graph","wordnet.csv",35);
     Experiments::datagraphEigenMatrix = "wordnet.csv";
 
 
@@ -187,10 +188,13 @@ int main(int argc, char** argv) {
     cout<<query_property<<endl;
 
     string datagraph = "../../test/reallife_dataset/wordnet/data_graph/wordnet.graph";
-    string querygraph = "../../test/large_query/"+dataset_name+"/"+query_property+"/"+query_property+"_"+query_number+".graph";
+    string querygraph = "../../test/randomwalk_queries/wordnet/50/randomwalk_50_"+query_number+".graph";
 
-//    string datagraph = "../../test/mydataset/youtube/data_graph/youtube.graph";
-//    string querygraph = "../../test/mydataset/youtube/query_graph/query_"+query_property+"_"+query_size+"_"+query_number+".graph";
+//    string datagraph = "../../test/reallife_dataset/wordnet/data_graph/wordnet.graph";
+//    string querygraph = "../../test/large_query/"+dataset_name+"/"+query_property+"/"+query_property+"_"+query_number+".graph";
+
+//    string datagraph = "../../test/mydataset/youtube/data_graph/25-0/youtube.graph";
+//    string querygraph = "../../test/mydataset/youtube/query_graph/25-0/query_"+query_property+"_"+query_size+"_"+query_number+".graph";
 
 
     pair <matching_algo_outputs,matching_algo_outputs> LDF = MatchingWrapper(datagraph,querygraph,"LDF");
@@ -246,7 +250,10 @@ int main(int argc, char** argv) {
     cout<<var<<endl;
 
     string file_path = "";
+//    file_path = "performance_experiment/test.csv";
     file_path = "performance_experiment/"+dataset_name+"_"+query_property+query_size+".csv";
+
+//    file_path = "performance_experiment/mydataset_lesslabels/"+dataset_name+"/25-0/"+query_property+query_size+".csv";
 
 
     std::ofstream myfile;
