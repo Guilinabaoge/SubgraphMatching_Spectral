@@ -169,7 +169,7 @@ void fixed_order_experiment(int argc, char** argv){
 }
 
 int main(int argc, char** argv) {
-    generate_datagraph_eigenvector("../../test/reallife_dataset/wordnet/data_graph/wordnet.graph","wordnet.csv",35);
+//    generate_datagraph_eigenvector("../../test/reallife_dataset/wordnet/data_graph/wordnet.graph","wordnet.csv",35);
     Experiments::datagraphEigenMatrix = "wordnet.csv";
 
 
@@ -182,10 +182,10 @@ int main(int argc, char** argv) {
     string query_number = command.getQueryNumber();
     string query_property = command.getQueryProperty();
 
-    cout<<dataset_name<<endl;
-    cout<<query_size<<endl;
-    cout<<query_number<<endl;
-    cout<<query_property<<endl;
+//    cout<<dataset_name<<endl;
+//    cout<<query_size<<endl;
+//    cout<<query_number<<endl;
+//    cout<<query_property<<endl;
 
     string datagraph = "../../test/reallife_dataset/wordnet/data_graph/wordnet.graph";
     string querygraph = "../../test/randomwalk_queries/wordnet/50/randomwalk_50_"+query_number+".graph";
@@ -198,6 +198,8 @@ int main(int argc, char** argv) {
 
 
     pair <matching_algo_outputs,matching_algo_outputs> LDF = MatchingWrapper(datagraph,querygraph,"LDF");
+    return 0;
+
     pair <matching_algo_outputs,matching_algo_outputs> NLF = MatchingWrapper(datagraph,querygraph,"NLF");
     pair <matching_algo_outputs,matching_algo_outputs> GQL = MatchingWrapper(datagraph,querygraph,"GQL");
     pair <matching_algo_outputs,matching_algo_outputs> TSOF = MatchingWrapper(datagraph,querygraph,"TSO");

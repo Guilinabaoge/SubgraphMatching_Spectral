@@ -14,7 +14,7 @@
 /**
  * A graph is stored as the CSR format.
  */
-
+using namespace std;
 class Graph {
 private:
     bool enable_label_offset_;
@@ -144,6 +144,7 @@ public:
 
     const ui * getVerticesByLabel(const LabelID id, ui& count) const {
         count = reverse_index_offsets_[id + 1] - reverse_index_offsets_[id];
+
         return reverse_index_ + reverse_index_offsets_[id];
     }
 
