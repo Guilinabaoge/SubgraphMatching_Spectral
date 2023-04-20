@@ -14,9 +14,6 @@ void Graph::BuildReverseIndex() {
     reverse_index_offsets_= new ui[labels_count_ + 1];
     reverse_index_offsets_[0] = 0;
 
-    cout<<labels_count_<<endl;
-    cout<<vertices_count_<<endl;
-
 
     ui total = 0;
     for (ui i = 0; i < labels_count_; ++i) {

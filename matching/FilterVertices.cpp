@@ -62,7 +62,25 @@ FilterVertices::LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
             ui degree = query_graph->getVertexDegree(i);
             ui data_vertex_num;
             // Label filtering
-            const ui* data_vertices = data_graph->getVerticesByLabel(label, data_vertex_num);
+            ui* data_vertices;
+            const ui* data_vertices_new;
+
+            if (label == data_graph->getLabelsCount()){
+                data_vertex_num = data_graph->getVerticesCount();
+                data_vertices = new ui[data_vertex_num];
+                for (ui i = 0; i < data_vertex_num; ++i) {
+                    data_vertices[i] = i;
+                }
+
+            }
+            else{
+                data_vertices_new = data_graph->getVerticesByLabel(label, data_vertex_num);
+                data_vertices = new ui[data_vertex_num];
+                for (ui i = 0; i < data_vertex_num; ++i) {
+                    data_vertices[i] = data_vertices_new[i];
+                }
+            }
+
             for (ui j = 0; j < data_vertex_num; ++j) {
                 ui data_vertex = data_vertices[j];
                 // Edge filtering
@@ -98,17 +116,43 @@ FilterVertices::LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
             ui degree = query_graph->getVertexDegree(i);
             ui data_vertex_num;
             // Label filtering
-            const ui* data_vertices = data_graph->getVerticesByLabel(label, data_vertex_num);
+            const ui* data_vertices_new;
+            ui* data_vertices;
+
+            if (label == data_graph->getLabelsCount()){
+                data_vertex_num = data_graph->getVerticesCount();
+                data_vertices = new ui[data_vertex_num];
+                for (ui i = 0; i < data_vertex_num; ++i) {
+                    data_vertices[i] = i;
+                }
+
+            }
+            else{
+                data_vertices_new = data_graph->getVerticesByLabel(label, data_vertex_num);
+                data_vertices = new ui[data_vertex_num];
+                for (ui i = 0; i < data_vertex_num; ++i) {
+                    data_vertices[i] = data_vertices_new[i];
+                }
+            }
+
+
             for (ui j = 0; j < data_vertex_num; ++j) {
                 ui data_vertex = data_vertices[j];
                 // Edge filtering
+
                 if (data_graph->getVertexDegree(data_vertex) >= degree) {
                     candidates[i][candidates_count[i]++] = data_vertex;
                 }
             }
+
+//            cout<<label<<endl;
+
+            delete[] data_vertices;
+
             if (candidates_count[i] == 0) {
                 return false;
             }
+
         }
         return true;
     }

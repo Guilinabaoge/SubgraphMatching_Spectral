@@ -446,22 +446,24 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     start = std::chrono::high_resolution_clock::now();
     enumResult s;
 
+
+
     if (input_engine_type == "EXPLORE") {
         embedding_count = EvaluateQuery::exploreGraph(data_graph, query_graph, edge_matrix, candidates,
                                                       candidates_count, matching_order, pivots, output_limit, call_count);
     } else if (input_engine_type == "LFTJ") {
 
-        if(inputs.order_pointer == NULL){
-            s = EvaluateQuery::LFTJ(data_graph, query_graph, edge_matrix, candidates, candidates_count,
-                                    matching_order, output_limit, call_count);
-        }else{
-            s = EvaluateQuery::LFTJ(data_graph, query_graph, edge_matrix, candidates, candidates_count,
-                                    inputs.order_pointer, output_limit, call_count);
-        }
-
-
-        embedding_count = s.embedding_cnt;
-        outputs.call_count = call_count;
+//        if(inputs.order_pointer == NULL){
+//            s = EvaluateQuery::LFTJ(data_graph, query_graph, edge_matrix, candidates, candidates_count,
+//                                    matching_order, output_limit, call_count);
+//        }else{
+//            s = EvaluateQuery::LFTJ(data_graph, query_graph, edge_matrix, candidates, candidates_count,
+//                                    inputs.order_pointer, output_limit, call_count);
+//        }
+//
+//
+//        embedding_count = s.embedding_cnt;
+//        outputs.call_count = call_count;
 
 
     } else if (input_engine_type == "GQL") {
@@ -518,6 +520,8 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     /**
      * Release the allocated memories.
      */
+
+
     delete[] candidates_count;
     delete[] tso_order;
     delete[] tso_tree;
@@ -529,9 +533,11 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     delete[] ceci_tree;
     delete[] matching_order;
     delete[] pivots;
-    for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
-        delete[] candidates[i];
-    }
+
+//
+//    for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
+//        delete[] candidates[i];
+//    }
     delete[] candidates;
 
     if (edge_matrix != NULL) {
