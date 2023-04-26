@@ -199,8 +199,8 @@ int main(int argc, char** argv) {
 
 //    pair <matching_algo_outputs,matching_algo_outputs> LDF = MatchingWrapper(datagraph,querygraph,"LDF");
 
-    matching_algo_outputs original = Experiments::experiment3(datagraph,querygraph,"LDF","0",NULL);
-    matching_algo_outputs enhanced = Experiments::experiment3(datagraph,querygraph,"LDF","1",NULL);
+    matching_algo_outputs original = Experiments::experiment3(datagraph,querygraph,"NLF","0",NULL);
+//    matching_algo_outputs enhanced = Experiments::experiment3(datagraph,querygraph,"NLF","1",NULL);
     return 0;
 
 //    pair <matching_algo_outputs,matching_algo_outputs> NLF = MatchingWrapper(datagraph,querygraph,"NLF");

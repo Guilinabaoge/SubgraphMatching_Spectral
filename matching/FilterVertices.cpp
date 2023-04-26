@@ -102,7 +102,7 @@ FilterVertices::LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
                     }
                 }
             }
-
+            delete[] data_vertices;
             if (candidates_count[i] == 0) {
                 return false;
             }
@@ -135,7 +135,6 @@ FilterVertices::LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
                 }
             }
 
-
             for (ui j = 0; j < data_vertex_num; ++j) {
                 ui data_vertex = data_vertices[j];
                 // Edge filtering
@@ -145,7 +144,7 @@ FilterVertices::LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
                 }
             }
 
-//            cout<<label<<endl;
+
 
             delete[] data_vertices;
 
@@ -169,6 +168,7 @@ FilterVertices::NLFFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
         MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
         datagraph_eigenvalue = openData(Experiments::datagraphEigenMatrix);
     }
+
     for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
         VertexID query_vertex = i;
         computeCandidateWithNLF(data_graph, query_graph, query_vertex, candidates_count[query_vertex],candidates[query_vertex],
@@ -828,12 +828,15 @@ FilterVertices::DPisoWrapper(Graph *data_graph, Graph *query_graph, ui **&candid
 void FilterVertices::allocateBuffer(const Graph *data_graph, const Graph *query_graph, ui **&candidates,
                                     ui *&candidates_count) {
     ui query_vertex_num = query_graph->getVerticesCount();
-    ui candidates_max_num = data_graph->getGraphMaxLabelFrequency();
+//    ui candidates_max_num = data_graph->getGraphMaxLabelFrequency();
+    //When a wildcard label exist, the max label frequency will be the datagraph size.
+    ui candidates_max_num = data_graph->getVerticesCount();
 
     candidates_count = new ui[query_vertex_num];
     memset(candidates_count, 0, sizeof(ui) * query_vertex_num);
 
     candidates = new ui*[query_vertex_num];
+
 
     for (ui i = 0; i < query_vertex_num; ++i) {
         candidates[i] = new ui[candidates_max_num];
@@ -909,11 +912,53 @@ FilterVertices::computeCandidateWithNLF(Graph *data_graph, Graph *query_graph, V
     LabelID label = query_graph->getVertexLabel(query_vertex);
     ui degree = query_graph->getVertexDegree(query_vertex);
 #if OPTIMIZED_LABELED_GRAPH == 1
-    const std::unordered_map<LabelID, ui>* query_vertex_nlf = query_graph->getVertexNLF(query_vertex);
+    const std::unordered_map<LabelID, ui>* query_vertex_nlf_old = query_graph->getVertexNLF(query_vertex);
+    std::unordered_map<LabelID, ui>* query_vertex_nlf = new std::unordered_map<LabelID, ui>[32];
+
+    for(const auto& pair: *query_vertex_nlf_old){
+        query_vertex_nlf->insert({pair.first,pair.second});
+    }
+
+
+    //Remove the NLF index for wildcard-label, and store the wildcard frequency for later check.
+//    auto it = query_vertex_nlf->find(data_graph->getLabelsCount());
+//    if (it != query_vertex_nlf->end()) {
+//        ui value = it->second;
+//        wildcard_count = value;
+//        query_vertex_nlf->erase(it);
+//    }
+
+
+
 #endif
+//    ui data_vertex_num;
+//    // Lable check
+//    const ui* data_vertices = data_graph->getVerticesByLabel(label, data_vertex_num);
+
     ui data_vertex_num;
-    // Lable check
-    const ui* data_vertices = data_graph->getVerticesByLabel(label, data_vertex_num);
+    const ui* data_vertices_new;
+    ui* data_vertices;
+
+
+    //Pass the label check when the vertex have wild card neighbor, add all vertices in datagraph into candidate vertex set C(u).
+    if (label == data_graph->getLabelsCount()){
+        data_vertex_num = data_graph->getVerticesCount();
+        data_vertices = new ui[data_vertex_num];
+        for (ui i = 0; i < data_vertex_num; ++i) {
+            data_vertices[i] = i;
+        }
+
+    }
+    // Only candidates with matching label are added to C(u)
+    else{
+        data_vertices_new = data_graph->getVerticesByLabel(label, data_vertex_num);
+        data_vertices = new ui[data_vertex_num];
+        for (ui i = 0; i < data_vertex_num; ++i) {
+            data_vertices[i] = data_vertices_new[i];
+        }
+    }
+
+
     count = 0;
     for (ui j = 0; j < data_vertex_num; ++j) {
         ui data_vertex = data_vertices[j];
@@ -922,15 +967,42 @@ FilterVertices::computeCandidateWithNLF(Graph *data_graph, Graph *query_graph, V
             // NFL check
 #if OPTIMIZED_LABELED_GRAPH == 1
             const std::unordered_map<LabelID, ui>* data_vertex_nlf = data_graph->getVertexNLF(data_vertex);
+            // Ensure the number of labels are the same
             if (data_vertex_nlf->size() >= query_vertex_nlf->size()) {
                 bool is_valid = true;
+                int wildcard_count = 0;
+                int data_sum =0;
+                vector<ui> v;
+
                 for (auto element : *query_vertex_nlf) {
-                    auto iter = data_vertex_nlf->find(element.first);
-                    if (iter == data_vertex_nlf->end() || iter->second < element.second) {
-                        is_valid = false;
-                        break;
+                    if (element.first != data_graph->getLabelsCount()){
+                        auto iter = data_vertex_nlf->find(element.first);
+                        if(iter == data_vertex_nlf->end() || iter->second < element.second) {
+                            is_valid = false;
+                            break;
+                        }
+                    }
+                    if(element.first == data_graph->getLabelsCount()){
+                        wildcard_count = element.second;
+                        continue;
+                    }
+                    v.push_back(element.first);
+                }
+
+                for(auto element: *data_vertex_nlf){
+                    if( find(v.begin(),v.end(),element.first) == v.end()){
+                        cout<<element.first<<" ";
                     }
                 }
+
+                //The difference between data_sum and query_sum should always be larger than wildcard_count
+                //The candidate is invalid if more wildcard than empty slot.
+                //TODO what if all labels are wild-card label
+//                int difference = data_sum - query_sum;
+//                if(difference < wildcard_count){
+//                    is_valid = false;
+//                }
+
 
                 if (is_valid) {
                     // EF check

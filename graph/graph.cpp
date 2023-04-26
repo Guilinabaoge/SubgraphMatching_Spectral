@@ -28,6 +28,8 @@ void Graph::BuildReverseIndex() {
 }
 
 #if OPTIMIZED_LABELED_GRAPH == 1
+
+//For each vertex, build a nlf, nlf[i][0] means return the number of neighbour of vertex i that have label 0
 void Graph::BuildNLF() {
     nlf_ = new std::unordered_map<LabelID, ui>[vertices_count_];
     for (ui i = 0; i < vertices_count_; ++i) {

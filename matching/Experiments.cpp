@@ -195,16 +195,12 @@ matching_algo_outputs Experiments::experiment3(const string data_graph_path,cons
     if(stoi(eigen)){
         cout<<"Matches: "<<outputs.enumOutput.embedding_cnt<<filter<<"call_count "<<outputs.call_count <<" With eigen filter total time "<<outputs.total_time<<" enumeration time: "
         <<outputs.enumeration_time<<" preprocessing time: "<<outputs.preprocessing_time<<" candidate_sum: "<<outputs.candidate_count_sum<<" matching order: ";
-        for (int i=0; i<outputs.query_size;i++){
-            cout<<outputs.matching_order[i]<<" ";
-        }
+
         cout<<" "<<endl;
     } else{
         cout<<"Matches: "<<outputs.enumOutput.embedding_cnt<<filter<<"call_count "<<outputs.call_count<<" No eigen filter total time "<<outputs.total_time<<" enumeration time: "
         <<outputs.enumeration_time<<" preprocessing time: "<<outputs.preprocessing_time<<" candidate_sum: "<<outputs.candidate_count_sum<<" matching order: ";
-        for (int i=0; i<outputs.query_size;i++){
-            cout<<outputs.matching_order[i]<<" ";
-        }
+
         cout<<" "<<endl;
     }
 
