@@ -988,20 +988,23 @@ FilterVertices::computeCandidateWithNLF(Graph *data_graph, Graph *query_graph, V
                     }
                     v.push_back(element.first);
                 }
-
+                //The intuition is when all the non-wild card label have passed the check,
+                //The wildcard label count have to be less than
+                // (Sum of labels frequency of the labels that is in the NLF of v not in u.)
+                // + (Sum of nlf(v)(l) - nlf(u)(l) for each l in nlf(u))  v is the vertices in datagraph, u is the vertices in querygraph.
                 for(auto element: *data_vertex_nlf){
                     if( find(v.begin(),v.end(),element.first) == v.end()){
-                        cout<<element.first<<" ";
+                        data_sum+= element.second;
+                    }
+                    else{
+                        auto q = query_vertex_nlf->find(element.first);
+                        data_sum+=(element.second-q->second);
                     }
                 }
 
-                //The difference between data_sum and query_sum should always be larger than wildcard_count
-                //The candidate is invalid if more wildcard than empty slot.
-                //TODO what if all labels are wild-card label
-//                int difference = data_sum - query_sum;
-//                if(difference < wildcard_count){
-//                    is_valid = false;
-//                }
+                if(data_vertex_num<wildcard_count){
+                    is_valid = false;
+                }
 
 
                 if (is_valid) {

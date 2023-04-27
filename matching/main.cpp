@@ -188,7 +188,7 @@ int main(int argc, char** argv) {
 //    cout<<query_property<<endl;
 
     string datagraph = "../../test/reallife_dataset/youtube/data_graph/youtube.graph";
-    string querygraph = "query_dense_32_1.graph";
+    string querygraph = "test query_dense_32_1.graph";
 
 //    string datagraph = "../../test/reallife_dataset/wordnet/data_graph/wordnet.graph";
 //    string querygraph = "../../test/large_query/"+dataset_name+"/"+query_property+"/"+query_property+"_"+query_number+".graph";
@@ -200,7 +200,7 @@ int main(int argc, char** argv) {
 //    pair <matching_algo_outputs,matching_algo_outputs> LDF = MatchingWrapper(datagraph,querygraph,"LDF");
 
     matching_algo_outputs original = Experiments::experiment3(datagraph,querygraph,"NLF","0",NULL);
-//    matching_algo_outputs enhanced = Experiments::experiment3(datagraph,querygraph,"NLF","1",NULL);
+    matching_algo_outputs enhanced = Experiments::experiment3(datagraph,querygraph,"NLF","1",NULL);
     return 0;
 
 //    pair <matching_algo_outputs,matching_algo_outputs> NLF = MatchingWrapper(datagraph,querygraph,"NLF");
