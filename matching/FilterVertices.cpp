@@ -318,6 +318,10 @@ FilterVertices::CFLFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
     computeCandidateWithNLF(data_graph, query_graph, start_vertex, candidates_count[start_vertex], candidates[start_vertex],datagraph_eigenvalue,
                             querygraph_eigenvalue,isEigenCheck,top_s);
 
+    //TODO problem after here, NLF work as expected
+//    cout<<candidates_count[4]<<endl;
+
+
     ui* updated_flag = new ui[data_graph->getVerticesCount()];
     ui* flag = new ui[data_graph->getVerticesCount()];
     std::fill(flag, flag + data_graph->getVerticesCount(), 0);
