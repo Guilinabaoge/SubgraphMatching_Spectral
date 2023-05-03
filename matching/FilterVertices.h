@@ -93,6 +93,8 @@ public:
                       TreeNode *&tree, std::vector<std::unordered_map<VertexID, std::vector<VertexID>>> &TE_Candidates,
                       std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,
                       bool isEigenCheck, int top_s);
+
+    static void compactCandidatesWrapper(ui **&candidates, ui *&candidates_count, ui query_vertex_num,MatrixXd query_eigen,MatrixXd data_eigen,int top_s);
 private:
     static void allocateBuffer(const Graph* data_graph, const Graph* query_graph, ui** &candidates, ui* &candidates_count);
     static bool verifyExactTwigIso(const Graph *data_graph, const Graph *query_graph, ui data_vertex, ui query_vertex,
