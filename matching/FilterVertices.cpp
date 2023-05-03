@@ -294,7 +294,14 @@ FilterVertices::TSOFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
         }
     }
 
-    compactCandidates(candidates, candidates_count, query_vertex_num);
+//    compactCandidates(candidates, candidates_count, query_vertex_num);
+
+    if(isEigenCheck){
+        compactCandidatesWrapper(candidates,candidates_count,query_graph->getVerticesCount(),querygraph_eigenvalue,datagraph_eigenvalue,top_s);
+    }
+    else{
+        compactCandidates(candidates, candidates_count, query_graph->getVerticesCount());
+    }
 
     delete[] updated_flag;
     delete[] flag;
@@ -381,6 +388,10 @@ FilterVertices::compactCandidatesWrapper(ui **&candidates, ui *&candidates_count
         for (ui j = 0; j < candidates_count[query_vertex]; ++j) {
             VertexID data_vertex = candidates[query_vertex][j];
 
+            if(data_vertex == INVALID_VERTEX_ID){
+                continue;
+            }
+
             // Top Eigenvalue check
             bool top_s_check = true;
             for (ui e=0; e<top_s; e++){
@@ -434,7 +445,19 @@ FilterVertices::DPisoFilter(Graph *data_graph, Graph *query_graph, ui **&candida
         }
     }
 
-    compactCandidates(candidates, candidates_count, query_graph->getVerticesCount());
+//    compactCandidates(candidates, candidates_count, query_graph->getVerticesCount());
+
+    MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
+    MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
+    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
+    datagraph_eigenvalue = openData(Experiments::datagraphEigenMatrix);
+
+    if(isEigenCheck){
+        compactCandidatesWrapper(candidates,candidates_count,query_graph->getVerticesCount(),querygraph_eigenvalue,datagraph_eigenvalue,top_s);
+    }
+    else{
+        compactCandidates(candidates, candidates_count, query_graph->getVerticesCount());
+    }
 
     delete[] updated_flag;
     delete[] flag;
@@ -1094,7 +1117,25 @@ void FilterVertices::computeCandidateWithLDF(const Graph *data_graph, const Grap
     ui degree = query_graph->getVertexDegree(query_vertex);
     count = 0;
     ui data_vertex_num;
-    const ui* data_vertices = data_graph->getVerticesByLabel(label, data_vertex_num);
+//    const ui* data_vertices = data_graph->getVerticesByLabel(label, data_vertex_num);
+    ui* data_vertices;
+    const ui* data_vertices_new;
+
+    if (label == data_graph->getLabelsCount()){
+        data_vertex_num = data_graph->getVerticesCount();
+        data_vertices = new ui[data_vertex_num];
+        for (ui i = 0; i < data_vertex_num; ++i) {
+            data_vertices[i] = i;
+        }
+
+    }
+    else{
+        data_vertices_new = data_graph->getVerticesByLabel(label, data_vertex_num);
+        data_vertices = new ui[data_vertex_num];
+        for (ui i = 0; i < data_vertex_num; ++i) {
+            data_vertices[i] = data_vertices_new[i];
+        }
+    }
 
     if (buffer == NULL) {
         for (ui i = 0; i < data_vertex_num; ++i) {
