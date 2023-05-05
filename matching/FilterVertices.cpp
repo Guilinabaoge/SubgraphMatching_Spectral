@@ -8,6 +8,7 @@
 #include <utility/graphoperations.h>
 #include <vector>
 #include <algorithm>
+#include <numeric>
 
 #include <Eigen/Core>
 #include <Eigen/SparseCore>
@@ -189,6 +190,7 @@ FilterVertices::GQLFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
     if (!NLFFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck,top_s))
         return false;
 
+
     // Allocate buffer.
     ui query_vertex_num = query_graph->getVerticesCount();
     ui data_vertex_num = data_graph->getVerticesCount();
@@ -219,6 +221,7 @@ FilterVertices::GQLFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
         }
     }
 
+
     // Global refinement.
     for (ui l = 0; l < 2; ++l) {
         for (ui i = 0; i < query_vertex_num; ++i) {
@@ -239,8 +242,8 @@ FilterVertices::GQLFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
         }
     }
 
-    // Compact candidates.
     compactCandidates(candidates, candidates_count, query_vertex_num);
+
 
     // Release memory.
     for (ui i = 0; i < query_vertex_num; ++i) {
@@ -283,7 +286,14 @@ FilterVertices::TSOFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
     for (ui i = 1; i < query_vertex_num; ++i) {
         VertexID query_vertex = order[i];
         TreeNode& node = tree[query_vertex];
-        generateCandidates(data_graph, query_graph, query_vertex, &node.parent_, 1, candidates, candidates_count, flag, updated_flag);
+        if(isEigenCheck){
+            generateCandidatesWrapper(data_graph, query_graph, query_vertex, &node.parent_, 1, candidates,
+                                      candidates_count, flag, updated_flag,querygraph_eigenvalue,datagraph_eigenvalue,top_s);
+        }
+        else {
+            generateCandidates(data_graph, query_graph, query_vertex, &node.parent_, 1, candidates, candidates_count,
+                               flag, updated_flag);
+        }
     }
 
     for (int i = query_vertex_num - 1; i >= 0; --i) {
@@ -294,14 +304,8 @@ FilterVertices::TSOFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
         }
     }
 
-//    compactCandidates(candidates, candidates_count, query_vertex_num);
+    compactCandidates(candidates, candidates_count, query_vertex_num);
 
-    if(isEigenCheck){
-        compactCandidatesWrapper(candidates,candidates_count,query_graph->getVerticesCount(),querygraph_eigenvalue,datagraph_eigenvalue,top_s);
-    }
-    else{
-        compactCandidates(candidates, candidates_count, query_graph->getVerticesCount());
-    }
 
     delete[] updated_flag;
     delete[] flag;
@@ -336,7 +340,12 @@ FilterVertices::CFLFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
         for (int j = level_offset[i]; j < level_offset[i + 1]; ++j) {
             VertexID query_vertex = order[j];
             TreeNode& node = tree[query_vertex];
-            generateCandidates(data_graph, query_graph, query_vertex, node.bn_, node.bn_count_, candidates, candidates_count, flag, updated_flag);
+            if(isEigenCheck){
+                generateCandidatesWrapper(data_graph, query_graph, query_vertex, node.bn_, node.bn_count_, candidates, candidates_count, flag, updated_flag,querygraph_eigenvalue,datagraph_eigenvalue,top_s);
+            }
+            else{
+                generateCandidates(data_graph, query_graph, query_vertex, node.bn_, node.bn_count_, candidates, candidates_count, flag, updated_flag);
+            }
 
         }
 
@@ -365,19 +374,134 @@ FilterVertices::CFLFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
         }
     }
 
-    if(isEigenCheck){
-        compactCandidatesWrapper(candidates,candidates_count,query_graph->getVerticesCount(),querygraph_eigenvalue,datagraph_eigenvalue,top_s);
-    }
-    else{
-        compactCandidates(candidates, candidates_count, query_graph->getVerticesCount());
-    }
-
-
+    compactCandidates(candidates, candidates_count, query_graph->getVerticesCount());
 
 
     delete[] updated_flag;
     delete[] flag;
     return isCandidateSetValid(candidates, candidates_count, query_graph->getVerticesCount());
+}
+
+void
+FilterVertices::generateCandidatesWrapper(const Graph *data_graph, const Graph *query_graph, VertexID query_vertex,
+                                   VertexID *pivot_vertices, ui pivot_vertices_count, VertexID **candidates,
+                                   ui *candidates_count, ui *flag, ui *updated_flag,MatrixXd query_eigen,MatrixXd data_eigen,int top_s) {
+    LabelID query_vertex_label = query_graph->getVertexLabel(query_vertex);
+    ui query_vertex_degree = query_graph->getVertexDegree(query_vertex);
+#if OPTIMIZED_LABELED_GRAPH == 1
+    const std::unordered_map<LabelID , ui>* query_vertex_nlf = query_graph->getVertexNLF(query_vertex);
+#endif
+    ui count = 0;
+    ui updated_flag_count = 0;
+
+    for (ui i = 0; i < pivot_vertices_count; ++i) {
+        VertexID pivot_vertex = pivot_vertices[i];
+
+        for (ui j = 0; j < candidates_count[pivot_vertex]; ++j) {
+            VertexID v = candidates[pivot_vertex][j];
+
+            if (v == INVALID_VERTEX_ID)
+                continue;
+            ui v_nbrs_count;
+            const VertexID* v_nbrs = data_graph->getVertexNeighbors(v, v_nbrs_count);
+
+            for (ui k = 0; k < v_nbrs_count; ++k) {
+                VertexID v_nbr = v_nbrs[k];
+                LabelID v_nbr_label = data_graph->getVertexLabel(v_nbr);
+                ui v_nbr_degree = data_graph->getVertexDegree(v_nbr);
+
+                bool condition1 = flag[v_nbr] == count && v_nbr_label == query_vertex_label && v_nbr_degree >= query_vertex_degree;
+                bool condition_wildcard = flag[v_nbr] == count && data_graph->getLabelsCount() == query_vertex_label && v_nbr_degree >= query_vertex_degree;
+
+                if (condition1||condition_wildcard) {
+                    flag[v_nbr] += 1;
+
+                    if (count == 0) {
+                        updated_flag[updated_flag_count++] = v_nbr;
+                    }
+                }
+            }
+        }
+
+        count += 1;
+    }
+
+    for (ui i = 0; i < updated_flag_count; ++i) {
+        VertexID v = updated_flag[i];
+        if (flag[v] == count) {
+            // NLF filter.
+#if OPTIMIZED_LABELED_GRAPH == 1
+            const std::unordered_map<LabelID, ui>* data_vertex_nlf = data_graph->getVertexNLF(v);
+
+            if (data_vertex_nlf->size() >= query_vertex_nlf->size()) {
+                bool is_valid = true;
+                int wildcard_count = 0;
+                int data_sum =0;
+                vector<ui> checked;
+
+                for (auto element : *query_vertex_nlf) {
+                    if (element.first != data_graph->getLabelsCount()) {
+                        auto iter = data_vertex_nlf->find(element.first);
+                        if (iter == data_vertex_nlf->end() || iter->second < element.second) {
+                            is_valid = false;
+                            break;
+                        }
+                    }
+                    if(element.first == data_graph->getLabelsCount()){
+                        wildcard_count = element.second;
+                        continue;
+                    }
+                    checked.push_back(element.first);
+                }
+
+                //The intuition is when all the non-wild card label have passed the check,
+                //The wildcard label count have to be less than
+                // (Sum of labels frequency of the labels that is in the NLF of v not in u.)
+                // + (Sum of nlf(v)(l) - nlf(u)(l) for each l in nlf(u))  v is the vertices in datagraph, u is the vertices in querygraph.
+                for(auto element: *data_vertex_nlf){
+                    if( find(checked.begin(),checked.end(),element.first) == checked.end()){
+                        data_sum+= element.second;
+                    }
+                    else{
+                        auto q = query_vertex_nlf->find(element.first);
+                        data_sum+=(element.second-q->second);
+                    }
+                }
+
+                if(data_sum<wildcard_count){
+                    is_valid = false;
+                }
+
+                // Top Eigenvalue check
+                bool top_s_check = true;
+                for (ui e=0; e<top_s; e++){
+                    if ( data_eigen.row(v)[e] > query_eigen.row(query_vertex)[e]
+                         || abs(data_eigen.row(v)[e] - query_eigen.row(query_vertex)[e])<0.001){
+                        top_s_check = true;
+                    }
+                    else{
+                        top_s_check = false;
+                        break;
+                    }
+                }
+
+                is_valid = is_valid && top_s_check;
+
+                if (is_valid) {
+                    candidates[query_vertex][candidates_count[query_vertex]++] = v;
+                }
+            }
+#else
+            candidates[query_vertex][candidates_count[query_vertex]++] = v;
+#endif
+        }
+    }
+
+    for (ui i = 0; i < updated_flag_count; ++i) {
+        ui v = updated_flag[i];
+        flag[v] = 0;
+    }
+
 }
 
 void
@@ -445,19 +569,9 @@ FilterVertices::DPisoFilter(Graph *data_graph, Graph *query_graph, ui **&candida
         }
     }
 
-//    compactCandidates(candidates, candidates_count, query_graph->getVerticesCount());
+    compactCandidates(candidates, candidates_count, query_graph->getVerticesCount());
 
-    MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
-    MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
-    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
-    datagraph_eigenvalue = openData(Experiments::datagraphEigenMatrix);
 
-    if(isEigenCheck){
-        compactCandidatesWrapper(candidates,candidates_count,query_graph->getVerticesCount(),querygraph_eigenvalue,datagraph_eigenvalue,top_s);
-    }
-    else{
-        compactCandidates(candidates, candidates_count, query_graph->getVerticesCount());
-    }
 
     delete[] updated_flag;
     delete[] flag;
@@ -1111,15 +1225,16 @@ FilterVertices::computeCandidateWithNLF(Graph *data_graph, Graph *query_graph, V
 
 }
 
-void FilterVertices::computeCandidateWithLDF(const Graph *data_graph, const Graph *query_graph, VertexID query_vertex,
+void FilterVertices::computeCandidateWithLDF(Graph *data_graph, Graph *query_graph, VertexID query_vertex,
                                              ui &count, ui *buffer) {
+
     LabelID label = query_graph->getVertexLabel(query_vertex);
     ui degree = query_graph->getVertexDegree(query_vertex);
     count = 0;
     ui data_vertex_num;
-//    const ui* data_vertices = data_graph->getVerticesByLabel(label, data_vertex_num);
     ui* data_vertices;
     const ui* data_vertices_new;
+
 
     if (label == data_graph->getLabelsCount()){
         data_vertex_num = data_graph->getVerticesCount();
@@ -1243,7 +1358,6 @@ void FilterVertices::generateCandidates(const Graph *data_graph, const Graph *qu
                 if(data_sum<wildcard_count){
                     is_valid = false;
                 }
-
 
 
                 if (is_valid) {

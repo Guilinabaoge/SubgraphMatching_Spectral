@@ -262,12 +262,14 @@ VertexID GenerateFilteringPlan::selectDPisoStartVertex(Graph *data_graph, Graph 
     double min_score = data_graph->getVerticesCount();
     VertexID start_vertex = 0;
 
+
     for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
         ui degree = query_graph->getVertexDegree(i);
         if (degree <= 1)
             continue;
 
         ui count = 0;
+        //TODO EF check
         FilterVertices::computeCandidateWithLDF(data_graph, query_graph, i, count);
         double cur_score = count / (double)degree;
         if (cur_score < min_score) {
