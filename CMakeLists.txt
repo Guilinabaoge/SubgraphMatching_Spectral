@@ -8,6 +8,8 @@ include_directories(
 set(CMAKE_CXX_FLAGS
         "${CMAKE_CXX_FLAGS} -std=c++17 -O3 -g -march=native -pthread -I/usr/local/opt/libomp/include")
 
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
+
 add_subdirectory(graph)
 add_subdirectory(matching)
 add_subdirectory(utility)

@@ -34,7 +34,7 @@ public:
                                  MatrixXd datagraph_eigen, MatrixXd querygraph_eigen, bool isEigenCheck, int top_s);
 
 
-    static void computeCandidateWithLDF(const Graph *data_graph, const Graph *query_graph, VertexID query_vertex,
+    static void computeCandidateWithLDF(Graph *data_graph, Graph *query_graph, VertexID query_vertex,
                                         ui &count, ui *buffer = NULL);
 
     static void generateCandidates(const Graph *data_graph, const Graph *query_graph, VertexID query_vertex,
@@ -93,6 +93,11 @@ public:
                       TreeNode *&tree, std::vector<std::unordered_map<VertexID, std::vector<VertexID>>> &TE_Candidates,
                       std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,
                       bool isEigenCheck, int top_s);
+
+    static void compactCandidatesWrapper(ui **&candidates, ui *&candidates_count, ui query_vertex_num,MatrixXd query_eigen,MatrixXd data_eigen,int top_s);
+    static void generateCandidatesWrapper(const Graph *data_graph, const Graph *query_graph, VertexID query_vertex,
+                                              VertexID *pivot_vertices, ui pivot_vertices_count, VertexID **candidates,
+                                              ui *candidates_count, ui *flag, ui *updated_flag,MatrixXd query_eigen,MatrixXd data_eigen,int top_s);
 private:
     static void allocateBuffer(const Graph* data_graph, const Graph* query_graph, ui** &candidates, ui* &candidates_count);
     static bool verifyExactTwigIso(const Graph *data_graph, const Graph *query_graph, ui data_vertex, ui query_vertex,

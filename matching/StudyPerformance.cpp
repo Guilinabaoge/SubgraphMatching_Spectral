@@ -35,69 +35,6 @@
 //#define PRINT;
 //#define ONLYCOUNTS;
 
-size_t StudyPerformance::enumerate(Graph* data_graph, Graph* query_graph, Edges*** edge_matrix, ui** candidates, ui* candidates_count,
-                ui* matching_order, size_t output_limit) {
-    static ui order_id = 0;
-
-    order_id += 1;
-
-    auto start = std::chrono::high_resolution_clock::now();
-
-
-
-    size_t call_count = 0;
-    size_t embedding_count = EvaluateQuery::LFTJ(data_graph, query_graph, edge_matrix, candidates, candidates_count,
-                               matching_order, output_limit, call_count).embedding_cnt;
-
-
-    auto end = std::chrono::high_resolution_clock::now();
-    double enumeration_time_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-#ifdef SPECTRUM
-    if (EvaluateQuery::exit_) {
-        printf("Spectrum Order %u status: Timeout\n", order_id);
-    }
-    else {
-        printf("Spectrum Order %u status: Complete\n", order_id);
-    }
-#endif
-    printf("Spectrum Order %u Enumerate time (seconds): %.4lf\n", order_id, NANOSECTOSEC(enumeration_time_in_ns));
-    printf("Spectrum Order %u #Embeddings: %zu\n", order_id, embedding_count);
-    printf("Spectrum Order %u Call Count: %zu\n", order_id, call_count);
-    printf("Spectrum Order %u Per Call Count Time (nanoseconds): %.4lf\n", order_id, enumeration_time_in_ns / (call_count == 0 ? 1 : call_count));
-
-
-    return embedding_count;
-}
-
-void StudyPerformance::spectrum_analysis(Graph* data_graph, Graph* query_graph, Edges*** edge_matrix, ui** candidates, ui* candidates_count,
-                       size_t output_limit, std::vector<std::vector<ui>>& spectrum, size_t time_limit_in_sec) {
-
-    for (auto& order : spectrum) {
-        std::cout << "----------------------------" << std::endl;
-        ui* matching_order = order.data();
-        GenerateQueryPlan::printSimplifiedQueryPlan(query_graph, matching_order);
-
-        std::future<size_t> future = std::async(std::launch::async, [data_graph, query_graph, edge_matrix, candidates, candidates_count,
-                                                                     matching_order, output_limit](){
-            return enumerate(data_graph, query_graph, edge_matrix, candidates, candidates_count, matching_order, output_limit);
-        });
-
-        std::cout << "execute...\n";
-        std::future_status status;
-        do {
-            status = future.wait_for(std::chrono::seconds(time_limit_in_sec));
-            if (status == std::future_status::deferred) {
-                std::cout << "Deferred\n";
-                exit(-1);
-            } else if (status == std::future_status::timeout) {
-#ifdef SPECTRUM
-                EvaluateQuery::exit_ = true;
-#endif
-            }
-        } while (status != std::future_status::ready);
-    }
-}
-
 
 matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inputs){
     int argc = 0;
@@ -244,280 +181,21 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
 
     // Sort the candidates to support the set intersections
     // TODO figure out why CECI doesn't work, read the paper.
-    if (input_filter_type != "CECI")
-        FilterVertices::sortCandidates(candidates, candidates_count, query_graph->getVerticesCount());
-
-    end = std::chrono::high_resolution_clock::now();
-    double filter_vertices_time_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+//    if (input_filter_type != "CECI")
+//        FilterVertices::sortCandidates(candidates, candidates_count, query_graph->getVerticesCount());
+//
+//    end = std::chrono::high_resolution_clock::now();
+//    double filter_vertices_time_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
     int sum = 0;
     outputs.candidate_count_sum = accumulate(candidates_count, candidates_count + query_graph->getVerticesCount(), sum);
 
-#ifdef ONLYCOUNTS
-    return outputs;
-#endif
 
-    for (int i=0; i<query_graph->getVerticesCount();i++){
-        outputs.candidate.push_back(set<ui>());
-    }
-
-    for (int i=0; i<query_graph->getVerticesCount();i++){
-        for(int j=0;j<candidates_count[i];j++){
-            outputs.candidate[i].insert(candidates[i][j]);
-        }
-    }
-
-
-    // Compute the candidates false positive ratio.
-#ifdef OPTIMAL_CANDIDATES
-    std::vector<ui> optimal_candidates_count;
-    double avg_false_positive_ratio = FilterVertices::computeCandidatesFalsePositiveRatio(data_graph, query_graph, candidates,
-                                                                                          candidates_count, optimal_candidates_count);
-    FilterVertices::printCandidatesInfo(query_graph, candidates_count, optimal_candidates_count);
-#endif
-
-#ifdef PRINT1
-    std::cout << "-----" << std::endl;
-    std::cout << "Build indices..." << std::endl;
-#endif
-
-    start = std::chrono::high_resolution_clock::now();
-
-    Edges ***edge_matrix = NULL;
-    if (input_filter_type != "CECI") {
-        edge_matrix = new Edges **[query_graph->getVerticesCount()];
-        for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
-            edge_matrix[i] = new Edges *[query_graph->getVerticesCount()];
-        }
-        BuildTable::buildTables(data_graph, query_graph, candidates, candidates_count, edge_matrix);
-    }
-
-    end = std::chrono::high_resolution_clock::now();
-    double build_table_time_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-
-    size_t memory_cost_in_bytes = 0;
-    if (input_filter_type != "CECI") {
-        memory_cost_in_bytes = BuildTable::computeMemoryCostInBytes(query_graph, candidates_count, edge_matrix);
-#ifdef PRINT1
-        BuildTable::printTableCardinality(query_graph, edge_matrix);
-#endif
-    }
-    else {
-        memory_cost_in_bytes = BuildTable::computeMemoryCostInBytes(query_graph, candidates_count, ceci_order, ceci_tree,
-                                                                    TE_Candidates, NTE_Candidates);
-#ifdef PRINT1
-        BuildTable::printTableCardinality(query_graph, ceci_tree, ceci_order, TE_Candidates, NTE_Candidates);
-#endif
-    }
-
-#ifdef PRINT1
-    std::cout << "-----" << std::endl;
-    std::cout << "Generate a matching order..." << std::endl;
-#endif
-
-    start = std::chrono::high_resolution_clock::now();
-
-    ui* matching_order = NULL;
-    ui* pivots = NULL;
-    ui** weight_array = NULL;
-
-    size_t order_num = 0;
-    sscanf(input_order_num.c_str(), "%zu", &order_num);
-
-    std::vector<std::vector<ui>> spectrum;
-    if (input_order_type == "QSI") {
-        GenerateQueryPlan::generateQSIQueryPlan(data_graph, query_graph, edge_matrix, matching_order, pivots);
-    } else if (input_order_type == "GQL") {
-
-        if (inputs.order_pointer == NULL){
-            GenerateQueryPlan::generateGQLQueryPlan(data_graph, query_graph, candidates_count, matching_order, pivots);
-
-        }
-        else {
-            GenerateQueryPlan::GQLorderfake(data_graph, query_graph, candidates_count, inputs.order_pointer, pivots);
-        }
-
-
-
-    } else if (input_order_type == "TSO") {
-        if (tso_tree == NULL) {
-            GenerateFilteringPlan::generateTSOFilterPlan(data_graph, query_graph, tso_tree, tso_order,top_s);
-        }
-        GenerateQueryPlan::generateTSOQueryPlan(query_graph, edge_matrix, matching_order, pivots, tso_tree, tso_order);
-    } else if (input_order_type == "CFL") {
-        if (cfl_tree == NULL) {
-            int level_count;
-            ui* level_offset;
-            GenerateFilteringPlan::generateCFLFilterPlan(data_graph, query_graph, cfl_tree, cfl_order, level_count, level_offset,isEigenCheck,top_s);
-            delete[] level_offset;
-        }
-        GenerateQueryPlan::generateCFLQueryPlan(data_graph, query_graph, edge_matrix, matching_order, pivots, cfl_tree, cfl_order, candidates_count);
-    } else if (input_order_type == "DPiso") {
-        if (dpiso_tree == NULL) {
-            GenerateFilteringPlan::generateDPisoFilterPlan(data_graph, query_graph, dpiso_tree, dpiso_order);
-        }
-
-        GenerateQueryPlan::generateDSPisoQueryPlan(query_graph, edge_matrix, matching_order, pivots, dpiso_tree, dpiso_order,
-                                                   candidates_count, weight_array);
-    }
-    else if (input_order_type == "CECI") {
-        GenerateQueryPlan::generateCECIQueryPlan(query_graph, ceci_tree, ceci_order, matching_order, pivots);
-    }
-    else if (input_order_type == "RI") {
-        GenerateQueryPlan::generateRIQueryPlan(data_graph, query_graph, matching_order, pivots);
-    }
-    else if (input_order_type == "VF2PP") {
-        GenerateQueryPlan::generateVF2PPQueryPlan(data_graph, query_graph, matching_order, pivots);
-    }
-    else if (input_order_type == "Spectrum") {
-        GenerateQueryPlan::generateOrderSpectrum(query_graph, spectrum, order_num);
-    }
-    else {
-        std::cout << "The specified order type '" << input_order_type << "' is not supported." << std::endl;
-    }
-
-    end = std::chrono::high_resolution_clock::now();
-    double generate_query_plan_time_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-
-    if (input_order_type != "Spectrum") {
-
-        if (inputs.order_pointer == NULL){
-            GenerateQueryPlan::checkQueryPlanCorrectness(query_graph, matching_order, pivots);
-
-        }
-        else {
-            GenerateQueryPlan::checkQueryPlanCorrectness(query_graph, inputs.order_pointer, pivots);
-        }
-
-#ifdef PRINT1
-        GenerateQueryPlan::printSimplifiedQueryPlan(query_graph, matching_order);
-#endif
-    }
-    else {
-#ifdef PRINT1
-        std::cout << "Generate " << spectrum.size() << " matching orders." << std::endl;
-#endif
-
-    }
-
-#ifdef PRINT1
-    std::cout << "-----" << std::endl;
-    std::cout << "Enumerate..." << std::endl;
-#endif
-
-    //Add the matching order into return struct
-    if(inputs.order_pointer == NULL){
-        for(int i =0; i<outputs.query_size;i++){
-            outputs.matching_order.push_back(matching_order[i]);
-            outputs.matching_order_string.append(to_string(matching_order[i])+"-");
-        }
-        outputs.matching_order_string.pop_back();
-    }
-    else {
-        for(int i =0; i<outputs.query_size;i++){
-            outputs.matching_order.push_back(inputs.order_pointer[i]);
-            outputs.matching_order_string.append(to_string(inputs.order_pointer[i])+"-");
-        }
-        outputs.matching_order_string.pop_back();
-    }
-
-
-
-
-
-    size_t output_limit = 0;
-    size_t embedding_count = 0;
-    if (input_max_embedding_num == "MAX") {
-        output_limit = std::numeric_limits<size_t>::max();
-    }
-    else {
-        sscanf(input_max_embedding_num.c_str(), "%zu", &output_limit);
-    }
-
-
-#if ENABLE_QFLITER == 1
-    EvaluateQuery::qfliter_bsr_graph_ = BuildTable::qfliter_bsr_graph_;
-#endif
-
-    size_t call_count = 0;
-    size_t time_limit = 0;
-    sscanf(input_time_limit.c_str(), "%zu", &time_limit);
-
-    start = std::chrono::high_resolution_clock::now();
-    enumResult s;
-
-    if (input_engine_type == "EXPLORE") {
-        embedding_count = EvaluateQuery::exploreGraph(data_graph, query_graph, edge_matrix, candidates,
-                                                      candidates_count, matching_order, pivots, output_limit, call_count);
-    } else if (input_engine_type == "LFTJ") {
-
-        if(inputs.order_pointer == NULL){
-            s = EvaluateQuery::LFTJ(data_graph, query_graph, edge_matrix, candidates, candidates_count,
-                                    matching_order, output_limit, call_count);
-        }else{
-            s = EvaluateQuery::LFTJ(data_graph, query_graph, edge_matrix, candidates, candidates_count,
-                                    inputs.order_pointer, output_limit, call_count);
-        }
-
-
-        embedding_count = s.embedding_cnt;
-        outputs.call_count = call_count;
-
-
-    } else if (input_engine_type == "GQL") {
-        s = EvaluateQuery::exploreGraphQLStyle(data_graph, query_graph, candidates, candidates_count,
-                                                             matching_order, output_limit, call_count);
-
-        embedding_count = s.embedding_cnt;
-
-    } else if (input_engine_type == "QSI") {
-        embedding_count = EvaluateQuery::exploreQuickSIStyle(data_graph, query_graph, candidates, candidates_count,
-                                                             matching_order, pivots, output_limit, call_count);
-    }
-    else if (input_engine_type == "DPiso") {
-        embedding_count = EvaluateQuery::exploreDPisoStyle(data_graph, query_graph, dpiso_tree,
-                                                           edge_matrix, candidates, candidates_count,
-                                                           weight_array, dpiso_order, output_limit,
-                                                           call_count);
-//        embedding_count = EvaluateQuery::exploreDPisoRecursiveStyle(data_graph, query_graph, dpiso_tree,
-//                                                           edge_matrix, candidates, candidates_count,
-//                                                           weight_array, dpiso_order, output_limit,
-//                                                           call_count);
-    }
-    else if (input_engine_type == "Spectrum") {
-        spectrum_analysis(data_graph, query_graph, edge_matrix, candidates, candidates_count, output_limit, spectrum, time_limit);
-    }
-    else if (input_engine_type == "CECI") {
-        embedding_count = EvaluateQuery::exploreCECIStyle(data_graph, query_graph, ceci_tree, candidates, candidates_count, TE_Candidates,
-                                                          NTE_Candidates, ceci_order, output_limit, call_count);
-    }
-    else {
-        std::cout << "The specified engine type '" << input_engine_type << "' is not supported." << std::endl;
-        exit(-1);
-    }
-
-    end = std::chrono::high_resolution_clock::now();
-    double enumeration_time_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-
-
-    outputs.enumOutput = s;
-//    bool isvalid_candidates = Experiments::candidate_set_correctness_check(outputs.candidate,s.candidate_true,query_graph->getVerticesCount());
-//
-//    if(!isvalid_candidates) throw invalid_argument("Invalid candidate set, false negative occurs.");
-
-#ifdef DISTRIBUTION
-    std::ofstream outfile (input_distribution_file_path , std::ofstream::binary);
-    outfile.write((char*)EvaluateQuery::distribution_count_, sizeof(size_t) * data_graph->getVerticesCount());
-    delete[] EvaluateQuery::distribution_count_;
-#endif
-
-#ifdef PRINT1
-    std::cout << "--------------------------------------------------------------------" << std::endl;
-    std::cout << "Release memories..." << std::endl;
-#endif
     /**
      * Release the allocated memories.
      */
+
+
     delete[] candidates_count;
     delete[] tso_order;
     delete[] tso_tree;
@@ -527,28 +205,13 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     delete[] dpiso_tree;
     delete[] ceci_order;
     delete[] ceci_tree;
-    delete[] matching_order;
-    delete[] pivots;
+
+
+
     for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
         delete[] candidates[i];
     }
     delete[] candidates;
-
-    if (edge_matrix != NULL) {
-        for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
-            for (ui j = 0; j < query_graph->getVerticesCount(); ++j) {
-                delete edge_matrix[i][j];
-            }
-            delete[] edge_matrix[i];
-        }
-        delete[] edge_matrix;
-    }
-    if (weight_array != NULL) {
-        for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
-            delete[] weight_array[i];
-        }
-        delete[] weight_array;
-    }
 
     delete query_graph;
     delete data_graph;
@@ -557,11 +220,6 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
      * End.
      */
 
-    double preprocessing_time_in_ns = filter_vertices_time_in_ns + build_table_time_in_ns + generate_query_plan_time_in_ns;
-    double total_time_in_ns = preprocessing_time_in_ns + enumeration_time_in_ns;
-    outputs.total_time = NANOSECTOSEC(total_time_in_ns);
-    outputs.preprocessing_time = NANOSECTOSEC(preprocessing_time_in_ns);
-    outputs.enumeration_time = NANOSECTOSEC(enumeration_time_in_ns);
 #ifdef PRINT
     std::cout << "--------------------------------------------------------------------" << std::endl;
     printf("Load graphs time (seconds): %.4lf\n", NANOSECTOSEC(load_graphs_time_in_ns));
