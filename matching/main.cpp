@@ -170,7 +170,7 @@ void fixed_order_experiment(int argc, char** argv){
 
 int main(int argc, char** argv) {
 //    generate_datagraph_eigenvector("../../test/reallife_dataset/hprd/data_graph/hprd.graph","hprd.csv",35);
-    Experiments::datagraphEigenMatrix = "youtube.csv";
+    Experiments::datagraphEigenMatrix = "../../eigenmatrices/youtube.csv";
     string datagraph = "../../test/reallife_dataset/youtube/data_graph/youtube.graph";
 
     string percentage[5] = {"0","0.25","0.5","0.75","1"};
@@ -202,7 +202,7 @@ int main(int argc, char** argv) {
             }
 
             string file_path = "";
-            file_path = "pruning_power_experiment/wildcard/youtube.csv";
+            file_path = "../../pruning_power_experiment/wildcard/youtube.csv";
 
             std::string var = oss.str();
 
