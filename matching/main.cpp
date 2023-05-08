@@ -168,8 +168,8 @@ void fixed_order_experiment(int argc, char** argv){
     exact_eval(dataset_name,query_size,query_number,query_property);
 }
 
-int main(int argc, char** argv) {
-//    generate_datagraph_eigenvector("../../test/reallife_dataset/hprd/data_graph/hprd.graph","hprd.csv",35);
+int wildcard(){
+    //    generate_datagraph_eigenvector("../../test/reallife_dataset/hprd/data_graph/hprd.graph","hprd.csv",35);
     Experiments::datagraphEigenMatrix = "youtube.csv";
     string datagraph = "../../test/reallife_dataset/youtube/data_graph/youtube.graph";
 
@@ -215,65 +215,61 @@ int main(int argc, char** argv) {
 
 
     return 0;
-//
-//    vector<pair<matching_algo_outputs,matching_algo_outputs>> evaluations;
-//    evaluations.push_back(LDF);
-//    evaluations.push_back(NLF);
-//    evaluations.push_back(GQL);
-//    evaluations.push_back(TSOF);
-//    evaluations.push_back(CFL);
-//    evaluations.push_back(DPiso);
-//
-//    std::ostringstream oss;
-//    oss <<query_property<<"_"<<query_size<<"_"<<query_number;
-//
-//    for(auto &eval : evaluations){
-//        oss<<","<<eval.first.call_count<<","<<eval.second.call_count;
-//    }
-//    oss<<","<<KF.call_count
-//       <<","<<LDF.first.enumOutput.embedding_cnt;
-//
-//    for(auto &eval : evaluations){
-//        oss<<","<<eval.first.total_time<<","<<eval.second.total_time;
-//    }
-//    oss<<","<<KF.total_time<<","<<LDF.first.enumOutput.embedding_cnt;
-//
-//    for(auto &eval : evaluations){
-//        oss<<","<<eval.first.candidate_count_sum<<","<<eval.second.candidate_count_sum;
-//    }
-//    oss<<","<<KF.candidate_count_sum;
-//    for(auto &eval : evaluations){
-//        oss<<","<<eval.first.matching_order_string<<","<<eval.second.matching_order_string;
-//    }
-//    oss<<","<<KF.matching_order_string;
-//    for(auto &eval : evaluations){
-//        oss<<","<<eval.first.preprocessing_time<<","<<eval.second.preprocessing_time;
-//    }
-//    oss<<","<<KF.preprocessing_time;
-//    for(auto &eval : evaluations){
-//        oss<<","<<eval.first.enumeration_time<<","<<eval.second.enumeration_time;
-//    }
-//    oss<<","<<KF.enumeration_time;
-//
-//
-//    std::string var = oss.str();
-//
-//    cout<<var<<endl;
-//
-//    string file_path = "";
-////    file_path = "performance_experiment/test.csv";
-//    file_path = "performance_experiment/"+dataset_name+"_"+query_property+query_size+".csv";
-//
-////    file_path = "performance_experiment/mydataset_lesslabels/"+dataset_name+"/25-0/"+query_property+query_size+".csv";
-//
-//
-//    std::ofstream myfile;
-//    myfile.open (file_path,std::ios_base::app);
-//    myfile<<var<<"\n";
-//    myfile.close();
-//
-//    return 0;
-//
+}
+
+int main(int argc, char** argv) {
+//    generate_datagraph_eigenvector("../../test/reallife_dataset/hprd/data_graph/hprd.graph","hprd.csv",35);
+
+    map<std::string, int> dictionary;
+    dictionary["LDF"] = 0;
+    dictionary["NLF"] = 1;
+    dictionary["GQL"] = 2;
+    dictionary["TSO"] = 3;
+    dictionary["CFL"] = 4;
+    dictionary["DPiso"] = 5;
+
+    MatchingCommand command(argc,argv);
+    string dataset_name = command.getDatasetName();
+    string query_size = command.getQuerySize();
+    string query_number = command.getQueryNumber();
+    string query_property = command.getQueryProperty();
+    string filter = command.getFilterType();
+    Experiments::datagraphEigenMatrix = "wordnet.csv";
+    string datagraph = "../../test/reallife_dataset/wordnet/data_graph/wordnet.graph";
+    string querygraph = "../../test/reallife_dataset/wordnet/query_graph/query_"+query_property+"_"+query_size+"_"+query_number+".graph";
+
+    pair <matching_algo_outputs,matching_algo_outputs> result = MatchingWrapper(datagraph,querygraph,filter);
+
+
+    std::ostringstream oss;
+    oss <<query_property<<"_"<<query_size<<"_"<<query_number<<","<<dictionary[filter];
+    oss<<","<<result.first.call_count<<","<<result.second.call_count;
+    oss<<","<<result.first.total_time<<","<<result.second.total_time;
+    oss<<","<<result.first.candidate_count_sum<<","<<result.second.candidate_count_sum;
+    oss<<","<<result.first.enumOutput.embedding_cnt<<","<<result.second.enumOutput.embedding_cnt;
+    oss<<","<<result.first.matching_order_string<<","<<result.second.matching_order_string;
+    oss<<","<<result.first.preprocessing_time<<","<<result.second.preprocessing_time;
+    oss<<","<<result.first.enumeration_time<<","<<result.second.enumeration_time;
+
+
+
+    std::string var = oss.str();
+
+    cout<<var<<endl;
+
+    string file_path = "";
+//    file_path = "performance_experiment/test.csv";
+    file_path = "performance_experiment/"+dataset_name+"_"+query_property+query_size+".csv";
+
+//    file_path = "performance_experiment/mydataset_lesslabels/"+dataset_name+"/25-0/"+query_property+query_size+".csv";
+
+    std::ofstream myfile;
+    myfile.open (file_path,std::ios_base::app);
+    myfile<<var<<"\n";
+    myfile.close();
+
+    return 0;
+
 }
 
 
