@@ -234,7 +234,7 @@ int main(int argc, char** argv) {
     string query_number = command.getQueryNumber();
     string query_property = command.getQueryProperty();
     string filter = command.getFilterType();
-    Experiments::datagraphEigenMatrix = "wordnet.csv";
+    Experiments::datagraphEigenMatrix = "../../eigenmatrices/wordnet.csv";
     string datagraph = "../../test/reallife_dataset/wordnet/data_graph/wordnet.graph";
     string querygraph = "../../test/reallife_dataset/wordnet/query_graph/query_"+query_property+"_"+query_size+"_"+query_number+".graph";
 
@@ -258,10 +258,8 @@ int main(int argc, char** argv) {
     cout<<var<<endl;
 
     string file_path = "";
-//    file_path = "performance_experiment/test.csv";
-    file_path = "performance_experiment/"+dataset_name+"_"+query_property+query_size+".csv";
+    file_path = "../../performance_experiment/"+dataset_name+"/"+dataset_name+"_"+query_property+query_size+".csv";
 
-//    file_path = "performance_experiment/mydataset_lesslabels/"+dataset_name+"/25-0/"+query_property+query_size+".csv";
 
     std::ofstream myfile;
     myfile.open (file_path,std::ios_base::app);
