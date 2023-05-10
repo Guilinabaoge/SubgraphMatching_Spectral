@@ -159,12 +159,21 @@ def main():
     #     for e in [0,0.25,0.5,0.75,1]:
     #         wildcard("../reallife_dataset/youtube/query_graph/query_dense_32_{0}.graph".format(i),e,25,i)
     
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s','--size',help='Query size')
+    parser.add_argument('-p','--property',help='Query property') 
+    parser.add_argument('-d','--dataset',help='Dataset name') 
+
+    args = parser.parse_args() 
+    size = int(args.size) 
+    prop = args.property
+    dataset = args.dataset
 
     for x in range(1,201):
-        size = 30
+        #size = 50
         query_number = x
-        prop = "sparse"
-        dataset = "wordnet"
+        #prop = "sparse"
+        #dataset = "wordnet"
         G = randomwalk('reallife_dataset/{0}/data_graph/wordnet.graph'.format(dataset),size,prop)
         store_path = 'reallife_dataset/{3}/query_graph/query_{0}_{1}_{2}.graph'.format(prop,size,query_number,dataset)
         with open(store_path,'w') as f: 
