@@ -218,7 +218,8 @@ int wildcard(){
 }
 
 int main(int argc, char** argv) {
-//    generate_datagraph_eigenvector("../../test/reallife_dataset/hprd/data_graph/hprd.graph","hprd.csv",35);
+   // generate_datagraph_eigenvector("../../test/reallife_dataset/hprd/data_graph/hprd.graph","hprd.csv",35);
+
 
     map<std::string, int> dictionary;
     dictionary["LDF"] = 0;
@@ -234,9 +235,9 @@ int main(int argc, char** argv) {
     string query_number = command.getQueryNumber();
     string query_property = command.getQueryProperty();
     string filter = command.getFilterType();
-    Experiments::datagraphEigenMatrix = "../../eigenmatrices/wordnet.csv";
-    string datagraph = "../../test/reallife_dataset/wordnet/data_graph/wordnet.graph";
-    string querygraph = "../../test/reallife_dataset/wordnet/query_graph/query_"+query_property+"_"+query_size+"_"+query_number+".graph";
+    Experiments::datagraphEigenMatrix = "../../eigenmatrices/"+dataset_name+".csv";
+    string datagraph = "../../test/reallife_dataset/"+dataset_name+"/data_graph/"+dataset_name+".graph";
+    string querygraph = "../../test/reallife_dataset/"+dataset_name+"/query_graph/query_"+query_property+"_"+query_size+"_"+query_number+".graph";
 
     pair <matching_algo_outputs,matching_algo_outputs> result = MatchingWrapper(datagraph,querygraph,filter);
 
