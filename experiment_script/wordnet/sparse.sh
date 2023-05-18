@@ -19,7 +19,7 @@ counter=0;
 for element in ${arr[@]}
 do
 	byobu select-pane -t $counter
-	byobu send-keys "./performance.sh 1 200 patents sparse $element" Enter
+	byobu send-keys "./performance.sh 1 200 dblp sparse $element" Enter
 	((counter++))
 done	
 
