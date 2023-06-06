@@ -235,24 +235,23 @@ int main(int argc, char** argv) {
     string query_number = command.getQueryNumber();
     string query_property = command.getQueryProperty();
     string filter = command.getFilterType();
+    string isEigencheck = command.getEigenOrNot();
+
     Experiments::datagraphEigenMatrix = "../../eigenmatrices/"+dataset_name+".csv";
     string datagraph = "../../test/reallife_dataset/"+dataset_name+"/data_graph/"+dataset_name+".graph";
     string querygraph = "../../test/reallife_dataset/"+dataset_name+"/query_graph/query_"+query_property+"_"+query_size+"_"+query_number+".graph";
 
-    pair <matching_algo_outputs,matching_algo_outputs> result = MatchingWrapper(datagraph,querygraph,filter);
-
+    matching_algo_outputs result = Experiments::experiment3(datagraph,querygraph,filter,isEigencheck,NULL);
 
     std::ostringstream oss;
     oss <<query_property<<"_"<<query_size<<"_"<<query_number<<","<<dictionary[filter];
-    oss<<","<<result.first.call_count<<","<<result.second.call_count;
-    oss<<","<<result.first.total_time<<","<<result.second.total_time;
-    oss<<","<<result.first.candidate_count_sum<<","<<result.second.candidate_count_sum;
-    oss<<","<<result.first.enumOutput.embedding_cnt<<","<<result.second.enumOutput.embedding_cnt;
-    oss<<","<<result.first.matching_order_string<<","<<result.second.matching_order_string;
-    oss<<","<<result.first.preprocessing_time<<","<<result.second.preprocessing_time;
-    oss<<","<<result.first.enumeration_time<<","<<result.second.enumeration_time;
-
-
+    oss<<","<<result.call_count;
+    oss<<","<<result.total_time;
+    oss<<","<<result.candidate_count_sum;
+    oss<<","<<result.enumOutput.embedding_cnt;
+    oss<<","<<result.matching_order_string;
+    oss<<","<<result.preprocessing_time;
+    oss<<","<<result.enumeration_time;
 
     std::string var = oss.str();
 
