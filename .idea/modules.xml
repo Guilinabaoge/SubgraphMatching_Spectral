@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/SubgraphMatching.iml" filepath="$PROJECT_DIR$/.idea/SubgraphMatching.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/SubgraphMatching_Spectral.iml" filepath="$PROJECT_DIR$/.idea/SubgraphMatching_Spectral.iml" />
     </modules>
   </component>

@@ -1,0 +1,1 @@
+/usr/bin/c++  -std=c++17 -O3 -g -march=native -pthread -I/usr/local/opt/libomp/include -rdynamic CMakeFiles/GraphConverter.out.dir/GraphConverter.cpp.o -o GraphConverter.out  -Wl,-rpath,/home/zhiwei/SubgraphMatching_Spectral/performance_build/graph:/home/zhiwei/SubgraphMatching_Spectral/performance_build/utility ../graph/libgraph.so ../utility/libutility.so 

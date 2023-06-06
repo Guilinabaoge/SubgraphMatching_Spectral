@@ -170,14 +170,16 @@ void fixed_order_experiment(int argc, char** argv){
 
 int main(int argc, char** argv) {
 //    generate_datagraph_eigenvector("../../test/reallife_dataset/hprd/data_graph/hprd.graph","hprd.csv",35);
-    Experiments::datagraphEigenMatrix = "../../eigenmatrices/youtube.csv";
-    string datagraph = "../../test/reallife_dataset/youtube/data_graph/youtube.graph";
+    string dataset = "human";
+    string size = "20";
+    Experiments::datagraphEigenMatrix = "../../eigenmatrices/"+dataset+".csv";
+    string datagraph = "../../test/reallife_dataset/"+dataset+"/data_graph/"+dataset+".graph";
 
     string percentage[5] = {"0","0.25","0.5","0.75","1"};
-    for(int i =5; i<21;i++){
+    for(int i =1; i<21;i++){
         for(auto p: percentage){
             cout<<i<<endl;
-            string querygraph = "../../test/wildcard/youtube/dense_32_"+to_string(i)+"_"+ p+".graph";
+            string querygraph = "../../test/wildcard/"+dataset+"/dense_"+size+"_"+to_string(i)+"_"+ p+".graph";
             pair <matching_algo_outputs,matching_algo_outputs> LDF = MatchingWrapper(datagraph,querygraph,"LDF");
             pair <matching_algo_outputs,matching_algo_outputs> NLF = MatchingWrapper(datagraph,querygraph,"NLF");
             pair <matching_algo_outputs,matching_algo_outputs> GQL = MatchingWrapper(datagraph,querygraph,"GQL");
@@ -195,14 +197,14 @@ int main(int argc, char** argv) {
             evaluations.push_back(DPiso);
 
             std::ostringstream oss;
-            oss<<"dense_32_"+to_string(i)+"_"+ p;
+            oss<<"dense_"+size+"_"+to_string(i)+"_"+ p;
 
             for(auto &eval : evaluations){
                 oss<<","<<eval.first.candidate_count_sum<<","<<eval.second.candidate_count_sum;
             }
 
             string file_path = "";
-            file_path = "../../pruning_power_experiment/wildcard/youtube.csv";
+            file_path = "../../pruning_power_experiment/wildcard/"+dataset+".csv";
 
             std::string var = oss.str();
 
