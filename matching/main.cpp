@@ -220,7 +220,6 @@ int wildcard(){
 int main(int argc, char** argv) {
    // generate_datagraph_eigenvector("../../test/reallife_dataset/hprd/data_graph/hprd.graph","hprd.csv",35);
 
-
     map<std::string, int> dictionary;
     dictionary["LDF"] = 0;
     dictionary["NLF"] = 1;
@@ -244,7 +243,7 @@ int main(int argc, char** argv) {
     matching_algo_outputs result = Experiments::experiment3(datagraph,querygraph,filter,isEigencheck,NULL);
 
     std::ostringstream oss;
-    oss <<query_property<<"_"<<query_size<<"_"<<query_number<<","<<dictionary[filter];
+    oss <<query_property<<"_"<<query_size<<"_"<<query_number<<","<<dictionary[filter]<<","<<isEigencheck;
     oss<<","<<result.call_count;
     oss<<","<<result.total_time;
     oss<<","<<result.candidate_count_sum;
