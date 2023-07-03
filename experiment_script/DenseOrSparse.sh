@@ -9,8 +9,6 @@ fi
 
 byobu new-session -d -s "$2"
 
-
-
 byobu select-pane -t 0
 byobu split-window -v
 byobu select-pane -t 0

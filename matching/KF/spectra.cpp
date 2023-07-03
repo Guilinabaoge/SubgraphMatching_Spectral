@@ -534,7 +534,7 @@ void Vertices(vector<vector<CSV>> &FCS, int qsiz, int dsiz, Graph *data_graph, G
         eigenVD1[i] = new float[35];
     }
 
-    openData1(Experiments::datagraphEigenMatrix,eigenVD1);
+//    openData1(Experiments::datagraphEigenMatrix,eigenVD1);
 
 
     VectorXd devalues;

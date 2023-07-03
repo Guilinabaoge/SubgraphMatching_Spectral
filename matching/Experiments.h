@@ -9,6 +9,8 @@
 #include <vector>
 #include <set>
 #include "StudyPerformance.h"
+#include <Eigen/Core>
+#include <Eigen/SparseCore>
 //#include "EvaluateQuery.h"
 
 using namespace std;
@@ -26,7 +28,8 @@ struct queryMeta{
 
 class Experiments {
 public:
-    static string datagraphEigenMatrix;
+//    static string datagraphEigenMatrix;
+    static Eigen::MatrixXd datagraphEigenMatrix;
     static vector<std::set<ui>> ground_truth_interpreter(string path);
     static bool candidate_set_correctness_check(vector<set<ui>> candidate, vector<set<ui>> candidate_true, ui query_size);
     static string experiment1(Graph *data_graph, Graph *query_graph);
