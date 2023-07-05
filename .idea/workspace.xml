@@ -28,6 +28,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="57d514ef-f4eb-4851-9c80-5808aa4215ad" name="Changes" comment="Experiment update">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/experiment_script/DenseOrSparse.sh" beforeDir="false" afterPath="$PROJECT_DIR$/experiment_script/DenseOrSparse.sh" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -140,11 +141,6 @@
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
-    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
-      <method v="2">
-        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="graph" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="SubgraphMatching" TARGET_NAME="graph" CONFIG_NAME="Debug">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -212,6 +208,8 @@
       <workItem from="1686072937386" duration="2984000" />
       <workItem from="1686080003897" duration="640000" />
       <workItem from="1688383823262" duration="5481000" />
+      <workItem from="1688460287389" duration="599000" />
+      <workItem from="1688462937932" duration="455000" />
     </task>
     <task id="LOCAL-00001" summary="Check point">
       <created>1675964046640</created>

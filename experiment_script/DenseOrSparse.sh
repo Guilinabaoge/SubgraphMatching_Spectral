@@ -2,9 +2,9 @@
 
 if byobu list-sessions | grep -q "$2"; then
   byobu kill-session -t "$2"
-  echo "Session 'dense' killed."
+  echo "Session "$2" killed."
 else
-  echo "Session 'dense' does not exist, now create one"
+  echo "Session "$2" does not exist, now create one"
 fi
 
 byobu new-session -d -s "$2"
