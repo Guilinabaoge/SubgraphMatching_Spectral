@@ -30,6 +30,7 @@ enum OptionKeyword {
     QuerySize = 18,
     QueryProperty = 19,
     QueryNumber = 20,
+    WildcardPercentage = 21,
 
 };
 
@@ -43,6 +44,10 @@ private:
 
 public:
     MatchingCommand(int argc, char **argv);
+
+    std::string getWildcardPercentage(){
+        return options_value[OptionKeyword::WildcardPercentage];
+    }
 
     std::string getQueryNumber(){
         return options_value[OptionKeyword::QueryNumber];

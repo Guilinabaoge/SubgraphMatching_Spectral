@@ -27,10 +27,13 @@ MatchingCommand::MatchingCommand(const int argc, char **argv) : CommandParser(ar
     options_key[OptionKeyword::QuerySize] = "-qsize";
     options_key[OptionKeyword::QueryNumber] = "-qnumber";
     options_key[OptionKeyword::QueryProperty] = "-qprop";
+    options_key[OptionKeyword::WildcardPercentage] = "-wildcard";
     processOptions();
 };
 
 void MatchingCommand::processOptions() {
+
+    options_value[OptionKeyword::WildcardPercentage] = getCommandOption(options_key[OptionKeyword::WildcardPercentage]);
 
     options_value[OptionKeyword::QueryNumber] = getCommandOption(options_key[OptionKeyword::QueryNumber]);
 
