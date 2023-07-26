@@ -3,7 +3,7 @@
 if byobu list-sessions | grep -q "${1}"; then
   byobu kill-session -t "${1}"
   echo "Session wildcard killed."
-else
+lse
   echo "Session ${1} does not exist, now create one"
 fi
 
