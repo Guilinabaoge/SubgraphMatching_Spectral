@@ -9,7 +9,7 @@ if [ "$7" = "32" ]; then
       for j in 16 24 32;
       do
       (cd ../cmake-build-debug/matching;
-      timeout 300s ./SubgraphMatching.out -dataset "$3"  -qsize "$j" -qnumber "$i" -qprop "$p" -wildcard "$4" -filter "$5" -eigen "$6" -order "$8")
+      timeout 600s ./SubgraphMatching.out -dataset "$3"  -qsize "$j" -qnumber "$i" -qprop "$p" -wildcard "$4" -filter "$5" -eigen "$6" -order "$8")
       echo "${filter}"
       done
     done
@@ -22,7 +22,7 @@ else
       for j in 12 16 20;
       do
       (cd ../cmake-build-debug/matching;
-      timeout 300s ./SubgraphMatching.out -dataset "$3"  -qsize "$j" -qnumber "$i" -qprop "$p" -wildcard "$4" -filter "$5" -eigen "$6" -order "$7")
+      timeout 600s ./SubgraphMatching.out -dataset "$3"  -qsize "$j" -qnumber "$i" -qprop "$p" -wildcard "$4" -filter "$5" -eigen "$6" -order "$7")
       done
     done
   done
