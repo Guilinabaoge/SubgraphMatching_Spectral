@@ -30,6 +30,7 @@ struct matching_algo_outputs{
     double total_time;
     double preprocessing_time;
     double enumeration_time;
+    double eigenmatrix_time;
     vector<ui> matching_order;
     string matching_order_string;
     ui* order_pointer = NULL;

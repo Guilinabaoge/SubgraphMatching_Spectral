@@ -196,7 +196,7 @@ void Graph::loadGraphFromFileCompressed(const std::string &degree_path, const st
         exit(-1);
     }
 
-    auto start = std::chrono::high_resolution_clock::now();
+    auto start = std::chrono::steady_clock::now();
     int int_size;
     deg_file.read(reinterpret_cast<char *>(&int_size), 4);
     deg_file.read(reinterpret_cast<char *>(&vertices_count_), 4);
@@ -211,7 +211,7 @@ void Graph::loadGraphFromFileCompressed(const std::string &degree_path, const st
     deg_file.close();
     deg_file.clear();
 
-    auto end = std::chrono::high_resolution_clock::now();
+    auto end = std::chrono::steady_clock::now();
     std::cout << "Load degree file time: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << " seconds" << std::endl;
 
     std::ifstream adj_file(edge_path, std::ios::binary);
@@ -224,7 +224,7 @@ void Graph::loadGraphFromFileCompressed(const std::string &degree_path, const st
         exit(-1);
     }
 
-    start = std::chrono::high_resolution_clock::now();
+    start = std::chrono::steady_clock::now();
     size_t neighbors_count = (size_t)edges_count_ * 2;
     neighbors_ = new ui[neighbors_count];
 
@@ -249,7 +249,7 @@ void Graph::loadGraphFromFileCompressed(const std::string &degree_path, const st
 
     delete[] degrees;
 
-    end = std::chrono::high_resolution_clock::now();
+    end = std::chrono::steady_clock::now();
     std::cout << "Load adj file time: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << " seconds" << std::endl;
 
 
@@ -262,7 +262,7 @@ void Graph::loadGraphFromFileCompressed(const std::string &degree_path, const st
         exit(-1);
     }
 
-    start = std::chrono::high_resolution_clock::now();
+    start = std::chrono::steady_clock::now();
 
     labels_ = new ui[vertices_count_];
     label_file.read(reinterpret_cast<char *>(labels_), sizeof(int) * vertices_count_);
@@ -291,12 +291,12 @@ void Graph::loadGraphFromFileCompressed(const std::string &degree_path, const st
         }
     }
 
-    end = std::chrono::high_resolution_clock::now();
+    end = std::chrono::steady_clock::now();
     std::cout << "Load label file time: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << " seconds" << std::endl;
 
-    start = std::chrono::high_resolution_clock::now();
+    start = std::chrono::steady_clock::now();
     BuildReverseIndex();
-    end = std::chrono::high_resolution_clock::now();
+    end = std::chrono::steady_clock::now();
     std::cout << "Build reverse index file time: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << " seconds" << std::endl;
 #if OPTIMIZED_LABELED_GRAPH == 1
     if (enable_label_offset_) {

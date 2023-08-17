@@ -147,7 +147,8 @@ void GenerateFilteringPlan::generateCECIFilterPlan(Graph *data_graph, Graph *que
 }
 
 
-VertexID GenerateFilteringPlan::selectTSOFilterStartVertex(Graph *data_graph, Graph *query_graph,int top_s) {
+VertexID GenerateFilteringPlan::selectTSOFilterStartVertex(Graph *data_graph, Graph *query_graph,int top_s,
+                                                           MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue) {
     auto rank_compare = [](std::pair<VertexID, double> l, std::pair<VertexID, double> r) {
         return l.second < r.second;
     };
@@ -169,10 +170,10 @@ VertexID GenerateFilteringPlan::selectTSOFilterStartVertex(Graph *data_graph, Gr
         rank_queue.pop();
     }
 
-    MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
-    MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
-    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
-    datagraph_eigenvalue = Experiments::datagraphEigenMatrix;
+//    MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
+//    MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
+//    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
+//    datagraph_eigenvalue = Experiments::datagraphEigenMatrix;
 
     // Pick the one with the smallest number of candidates.
     VertexID start_vertex = 0;
@@ -183,7 +184,8 @@ VertexID GenerateFilteringPlan::selectTSOFilterStartVertex(Graph *data_graph, Gr
         if (rank_queue.size() == 1) {
             ui count;
             ui* fill = NULL;
-            FilterVertices::computeCandidateWithNLF(data_graph, query_graph, query_vertex, count,fill,datagraph_eigenvalue,querygraph_eigenvalue,false,top_s);
+            FilterVertices::computeCandidateWithNLF(data_graph, query_graph, query_vertex, count,fill,
+                                                    datagraph_eigenvalue,querygraph_eigenvalue,false,top_s);
             if (count < min_candidates_num) {
                 start_vertex = query_vertex;
             }
@@ -207,7 +209,8 @@ VertexID GenerateFilteringPlan::selectTSOFilterStartVertex(Graph *data_graph, Gr
     return start_vertex;
 }
 
-VertexID GenerateFilteringPlan::selectCFLFilterStartVertex(Graph *data_graph, Graph *query_graph, bool isEigenCheck, int top_s) {
+VertexID GenerateFilteringPlan::selectCFLFilterStartVertex(Graph *data_graph, Graph *query_graph, bool isEigenCheck, int top_s,
+                                                           MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue) {
     auto rank_compare = [](std::pair<VertexID, double> l, std::pair<VertexID, double> r) {
         return l.second < r.second;
     };
@@ -235,10 +238,10 @@ VertexID GenerateFilteringPlan::selectCFLFilterStartVertex(Graph *data_graph, Gr
     VertexID start_vertex = 0;
     double min_score = data_graph->getGraphMaxLabelFrequency() + 1;
 
-    MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
-    MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
-    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
-    datagraph_eigenvalue = Experiments::datagraphEigenMatrix;
+//    MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
+//    MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
+//    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
+//    datagraph_eigenvalue = Experiments::datagraphEigenMatrix;
 
     while (!rank_queue.empty()) {
         VertexID query_vertex = rank_queue.top().first;

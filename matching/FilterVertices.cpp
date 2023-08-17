@@ -22,7 +22,8 @@ using namespace Eigen;
 
 
 bool
-FilterVertices::LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, bool isEigenCheck,int top_s) {
+FilterVertices::LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, bool isEigenCheck,int top_s,
+                          MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue) {
     if (isEigenCheck){
         allocateBuffer(data_graph, query_graph, candidates, candidates_count);
         MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
@@ -132,15 +133,10 @@ FilterVertices::LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
 
 
 bool
-FilterVertices::NLFFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, bool isEigenCheck, int top_s) {
+FilterVertices::NLFFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
+                          bool isEigenCheck, int top_s,MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue) {
     allocateBuffer(data_graph, query_graph, candidates, candidates_count);
 
-    MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
-    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
-    if(isEigenCheck){
-        MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
-        datagraph_eigenvalue = Experiments::datagraphEigenMatrix;
-    }
 
     for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
         VertexID query_vertex = i;
@@ -157,9 +153,10 @@ FilterVertices::NLFFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
 }
 
 bool
-FilterVertices::GQLFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, bool isEigenCheck,int top_s) {
+FilterVertices::GQLFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
+                          bool isEigenCheck,int top_s,MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue) {
     // Local refinement.
-    if (!NLFFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck,top_s))
+    if (!NLFFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck,top_s,querygraph_eigenvalue,datagraph_eigenvalue))
         return false;
 
 
@@ -235,16 +232,16 @@ FilterVertices::GQLFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
 
 bool
 FilterVertices::TSOFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-                          ui *&order, TreeNode *&tree,bool isEigenCheck,int top_s) {
+                          ui *&order, TreeNode *&tree,bool isEigenCheck,int top_s,MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue) {
     allocateBuffer(data_graph, query_graph, candidates, candidates_count);
     GenerateFilteringPlan::generateTSOFilterPlan(data_graph, query_graph, tree, order,top_s);
 
     ui query_vertex_num = query_graph->getVerticesCount();
 
-    MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
-    MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
-    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
-    datagraph_eigenvalue = Experiments::datagraphEigenMatrix;
+//    MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
+//    MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
+//    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
+//    datagraph_eigenvalue = Experiments::datagraphEigenMatrix;
 
     // Get the candidates of the start vertex.
     VertexID start_vertex = order[0];
@@ -286,16 +283,11 @@ FilterVertices::TSOFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
 
 bool
 FilterVertices::CFLFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-                          ui *&order, TreeNode *&tree,bool isEigenCheck,int top_s) {
+                          ui *&order, TreeNode *&tree,bool isEigenCheck,int top_s,MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue) {
     allocateBuffer(data_graph, query_graph, candidates, candidates_count);
     int level_count;
     ui* level_offset;
     GenerateFilteringPlan::generateCFLFilterPlan(data_graph, query_graph, tree, order, level_count, level_offset,isEigenCheck,top_s);
-
-    MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
-    MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
-    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
-    datagraph_eigenvalue = Experiments::datagraphEigenMatrix;
 
     VertexID start_vertex = order[0];
     computeCandidateWithNLF(data_graph, query_graph, start_vertex, candidates_count[start_vertex], candidates[start_vertex],datagraph_eigenvalue,
@@ -313,10 +305,12 @@ FilterVertices::CFLFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
             VertexID query_vertex = order[j];
             TreeNode& node = tree[query_vertex];
             if(isEigenCheck){
-                generateCandidatesWrapper(data_graph, query_graph, query_vertex, node.bn_, node.bn_count_, candidates, candidates_count, flag, updated_flag,querygraph_eigenvalue,datagraph_eigenvalue,top_s);
+                generateCandidatesWrapper(data_graph, query_graph, query_vertex, node.bn_, node.bn_count_,
+                                          candidates, candidates_count, flag, updated_flag,querygraph_eigenvalue,datagraph_eigenvalue,top_s);
             }
             else{
-                generateCandidates(data_graph, query_graph, query_vertex, node.bn_, node.bn_count_, candidates, candidates_count, flag, updated_flag);
+                generateCandidates(data_graph, query_graph, query_vertex, node.bn_, node.bn_count_,
+                                   candidates, candidates_count, flag, updated_flag);
             }
 
         }
@@ -338,7 +332,6 @@ FilterVertices::CFLFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
         for (int j = level_offset[i]; j < level_offset[i + 1]; ++j) {
             VertexID query_vertex = order[j];
             TreeNode& node = tree[query_vertex];
-
             if (node.under_level_count_ > 0) {
                 pruneCandidates(data_graph, query_graph, query_vertex, node.under_level_, node.under_level_count_, candidates, candidates_count, flag, updated_flag);
 
@@ -512,8 +505,8 @@ FilterVertices::compactCandidatesWrapper(ui **&candidates, ui *&candidates_count
 
 bool
 FilterVertices::DPisoFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-                            ui *&order, TreeNode *&tree, bool isEigenCheck, int top_s) {
-    if (!LDFFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck,top_s))
+                            ui *&order, TreeNode *&tree, bool isEigenCheck, int top_s,MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue) {
+    if (!LDFFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck,top_s,querygraph_eigenvalue,datagraph_eigenvalue))
         return false;
 
     GenerateFilteringPlan::generateDPisoFilterPlan(data_graph, query_graph, tree, order);
@@ -931,47 +924,47 @@ FilterVertices::CECIFilter(Graph *data_graph, Graph *query_graph, ui **&candidat
     return true;
 }
 
-bool
-FilterVertices::LDFWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
-                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s){
-    return FilterVertices::LDFFilter(data_graph,query_graph,candidates,candidates_count,isEigenCheck,top_s);
-}
-
-bool
-FilterVertices::NLFWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
-                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s){
-    return FilterVertices::NLFFilter(data_graph,query_graph,candidates,candidates_count,isEigenCheck,top_s);
-}
-
-bool
-FilterVertices::GQLWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
-                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s){
-    return FilterVertices::GQLFilter(data_graph,query_graph,candidates,candidates_count,isEigenCheck,top_s);
-}
-
-bool
-FilterVertices::TSOWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
-                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s){
-    return FilterVertices::TSOFilter(data_graph,query_graph,candidates,candidates_count,order,tree,isEigenCheck,top_s);
-}
-
-bool
-FilterVertices::CFLWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
-                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s){
-    return FilterVertices::CFLFilter(data_graph,query_graph,candidates,candidates_count,order,tree,isEigenCheck,top_s);
-}
-
-bool
-FilterVertices::DPisoWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
-                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s){
-    return FilterVertices::DPisoFilter(data_graph,query_graph,candidates,candidates_count,order,tree,isEigenCheck,top_s);
-}
+//bool
+//FilterVertices::LDFWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
+//                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
+//                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s){
+//    return FilterVertices::LDFFilter(data_graph,query_graph,candidates,candidates_count,isEigenCheck,top_s);
+//}
+//
+//bool
+//FilterVertices::NLFWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
+//                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
+//                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s){
+//    return FilterVertices::NLFFilter(data_graph,query_graph,candidates,candidates_count,isEigenCheck,top_s);
+//}
+//
+//bool
+//FilterVertices::GQLWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
+//                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
+//                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s){
+//    return FilterVertices::GQLFilter(data_graph,query_graph,candidates,candidates_count,isEigenCheck,top_s);
+//}
+//
+//bool
+//FilterVertices::TSOWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
+//                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
+//                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s){
+//    return FilterVertices::TSOFilter(data_graph,query_graph,candidates,candidates_count,order,tree,isEigenCheck,top_s);
+//}
+//
+//bool
+//FilterVertices::CFLWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
+//                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
+//                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s){
+//    return FilterVertices::CFLFilter(data_graph,query_graph,candidates,candidates_count,order,tree,isEigenCheck,top_s);
+//}
+//
+//bool
+//FilterVertices::DPisoWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
+//                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
+//                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s){
+//    return FilterVertices::DPisoFilter(data_graph,query_graph,candidates,candidates_count,order,tree,isEigenCheck,top_s);
+//}
 
 
 
@@ -1155,7 +1148,6 @@ FilterVertices::computeCandidateWithNLF(Graph *data_graph, Graph *query_graph, V
                 if(data_sum<wildcard_count){
                     is_valid = false;
                 }
-
 
                 if (is_valid) {
                     // EF check

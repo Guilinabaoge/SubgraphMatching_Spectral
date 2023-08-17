@@ -14,15 +14,20 @@ using namespace Eigen;
 class FilterVertices {
 public:
     static bool EFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,int top_s);
-    static bool LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,bool isEigenCheck,int top_s);
-    static bool NLFFilter(Graph* data_graph, Graph* query_graph, ui** &candidates, ui* &candidates_count,bool isEigenCheck,int top_s);
-    static bool GQLFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,bool isEigenCheck,int top_s);
+    static bool LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,bool isEigenCheck,int top_s,
+                          MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue);
+    static bool NLFFilter(Graph* data_graph, Graph* query_graph, ui** &candidates, ui* &candidates_count,bool isEigenCheck,int top_s,
+                          MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue);
+    static bool GQLFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,bool isEigenCheck,int top_s,
+                          MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue);
     static bool TSOFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-                          ui *&order,TreeNode *&tree,bool isEigenCheck,int top_s);
+                          ui *&order,TreeNode *&tree,bool isEigenCheck,int top_s,
+                          MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue);
     static bool CFLFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-                              ui *&order, TreeNode *&tree, bool isEigenCheck,int top_s);
+                              ui *&order, TreeNode *&tree, bool isEigenCheck,int top_s,MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue);
     static bool DPisoFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-                            ui *&order, TreeNode *&tree, bool isEigenCheck,int top_s);
+                            ui *&order, TreeNode *&tree, bool isEigenCheck,int top_s,
+                            MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue);
 
     static bool CECIFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
                            ui *&order, TreeNode *&tree,   std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,

@@ -14,6 +14,7 @@
 #include <sstream>
 #include <fstream>
 #include <time.h>
+#include<ctime>
 
 #include "matchingcommand.h"
 #include "graph/graph.h"
@@ -143,7 +144,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     std::cout << "Load graphs..." << std::endl;
 #endif
 
-
+//    auto start = std::chrono::high_resolution_clock::now();
     auto start = std::chrono::high_resolution_clock::now();
 
     Graph* query_graph = new Graph(true);
@@ -200,13 +201,25 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     std::cout << "Filter candidates..." << std::endl;
 #endif
 
-    start = std::chrono::high_resolution_clock::now();
 
     bool isEigenCheck;
     int top_s = std::stoi( input_tops);
     istringstream(input_iseigen) >> isEigenCheck;
 
+    MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
+    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
+    if(isEigenCheck){
+        auto start = std::chrono::high_resolution_clock::now();
+        MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
+        auto end = std::chrono::high_resolution_clock::now();
+        double load_graphs_time_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+        outputs.eigenmatrix_time = NANOSECTOSEC(load_graphs_time_in_ns);
 
+        datagraph_eigenvalue = Experiments::datagraphEigenMatrix;
+    }
+
+
+    start = std::chrono::high_resolution_clock::now();
 
     ui** candidates = NULL;
     ui* candidates_count = NULL;
@@ -220,21 +233,26 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     ui* ceci_order = NULL;
     std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> TE_Candidates;
     std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> NTE_Candidates;
+
+
     if (input_filter_type == "LDF") {
-        FilterVertices::LDFFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck,top_s);
+        FilterVertices::LDFFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck,top_s,querygraph_eigenvalue,datagraph_eigenvalue);
     } else if(input_filter_type=="KF"){
         SpectralMatching(query_graph->getVerticesCount(), data_graph, input_query_graph_file, true,candidates,candidates_count);
     }
     else if (input_filter_type == "NLF") {
-        FilterVertices::NLFFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck,top_s);
+        FilterVertices::NLFFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck,top_s,querygraph_eigenvalue,datagraph_eigenvalue);
     } else if (input_filter_type == "GQL") {
-        FilterVertices::GQLFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck,top_s);
+        FilterVertices::GQLFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck,top_s,querygraph_eigenvalue,datagraph_eigenvalue);
     } else if (input_filter_type == "TSO") {
-        FilterVertices::TSOFilter(data_graph, query_graph, candidates, candidates_count, tso_order, tso_tree,isEigenCheck,top_s);
+        FilterVertices::TSOFilter(data_graph, query_graph, candidates, candidates_count, tso_order, tso_tree,isEigenCheck,top_s,
+                                  querygraph_eigenvalue,datagraph_eigenvalue);
     } else if (input_filter_type == "CFL") {
-        FilterVertices::CFLFilter(data_graph, query_graph, candidates, candidates_count, cfl_order, cfl_tree,isEigenCheck,top_s);
+        FilterVertices::CFLFilter(data_graph, query_graph, candidates, candidates_count, cfl_order, cfl_tree,isEigenCheck,top_s,
+                                  querygraph_eigenvalue,datagraph_eigenvalue);
     } else if (input_filter_type == "DPiso") {
-        FilterVertices::DPisoFilter(data_graph, query_graph, candidates, candidates_count, dpiso_order, dpiso_tree,isEigenCheck,top_s);
+        FilterVertices::DPisoFilter(data_graph, query_graph, candidates, candidates_count, dpiso_order, dpiso_tree,isEigenCheck,top_s,
+                                    querygraph_eigenvalue,datagraph_eigenvalue);
     } else if (input_filter_type == "CECI") {
         FilterVertices::CECIFilter(data_graph, query_graph, candidates, candidates_count, ceci_order, ceci_tree, TE_Candidates, NTE_Candidates,isEigenCheck,top_s);
     }  else {
@@ -498,6 +516,8 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
 
     end = std::chrono::high_resolution_clock::now();
     double enumeration_time_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+
+
 
 
     outputs.enumOutput = s;
