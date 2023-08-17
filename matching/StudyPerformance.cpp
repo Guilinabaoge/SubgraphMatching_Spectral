@@ -359,14 +359,16 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
 
     } else if (input_order_type == "TSO") {
         if (tso_tree == NULL) {
-            GenerateFilteringPlan::generateTSOFilterPlan(data_graph, query_graph, tso_tree, tso_order,top_s);
+            GenerateFilteringPlan::generateTSOFilterPlan(data_graph, query_graph, tso_tree, tso_order,top_s,
+                                                         querygraph_eigenvalue,datagraph_eigenvalue);
         }
         GenerateQueryPlan::generateTSOQueryPlan(query_graph, edge_matrix, matching_order, pivots, tso_tree, tso_order);
     } else if (input_order_type == "CFL") {
         if (cfl_tree == NULL) {
             int level_count;
             ui* level_offset;
-            GenerateFilteringPlan::generateCFLFilterPlan(data_graph, query_graph, cfl_tree, cfl_order, level_count, level_offset,isEigenCheck,top_s);
+            GenerateFilteringPlan::generateCFLFilterPlan(data_graph, query_graph, cfl_tree, cfl_order, level_count, level_offset,isEigenCheck,top_s,
+                                                         querygraph_eigenvalue,datagraph_eigenvalue);
             delete[] level_offset;
         }
         GenerateQueryPlan::generateCFLQueryPlan(data_graph, query_graph, edge_matrix, matching_order, pivots, cfl_tree, cfl_order, candidates_count);

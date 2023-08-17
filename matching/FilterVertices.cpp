@@ -234,7 +234,7 @@ bool
 FilterVertices::TSOFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
                           ui *&order, TreeNode *&tree,bool isEigenCheck,int top_s,MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue) {
     allocateBuffer(data_graph, query_graph, candidates, candidates_count);
-    GenerateFilteringPlan::generateTSOFilterPlan(data_graph, query_graph, tree, order,top_s);
+    GenerateFilteringPlan::generateTSOFilterPlan(data_graph, query_graph, tree, order,top_s,querygraph_eigenvalue,datagraph_eigenvalue);
 
     ui query_vertex_num = query_graph->getVerticesCount();
 
@@ -287,7 +287,7 @@ FilterVertices::CFLFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
     allocateBuffer(data_graph, query_graph, candidates, candidates_count);
     int level_count;
     ui* level_offset;
-    GenerateFilteringPlan::generateCFLFilterPlan(data_graph, query_graph, tree, order, level_count, level_offset,isEigenCheck,top_s);
+    GenerateFilteringPlan::generateCFLFilterPlan(data_graph, query_graph, tree, order, level_count, level_offset,isEigenCheck,top_s,querygraph_eigenvalue,datagraph_eigenvalue);
 
     VertexID start_vertex = order[0];
     computeCandidateWithNLF(data_graph, query_graph, start_vertex, candidates_count[start_vertex], candidates[start_vertex],datagraph_eigenvalue,

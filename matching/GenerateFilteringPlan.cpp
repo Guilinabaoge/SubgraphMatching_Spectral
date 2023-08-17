@@ -15,8 +15,8 @@ using namespace Eigen;
 
 
 void GenerateFilteringPlan::generateTSOFilterPlan(Graph *data_graph, Graph *query_graph, TreeNode *&tree,
-                                                   VertexID *&order, int top_s) {
-    VertexID start_vertex = selectTSOFilterStartVertex(data_graph, query_graph,top_s);
+                                                   VertexID *&order, int top_s,MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue) {
+    VertexID start_vertex = selectTSOFilterStartVertex(data_graph, query_graph,top_s,querygraph_eigenvalue,datagraph_eigenvalue);
     VertexID* bfs_order;
     GraphOperations::bfsTraversal(query_graph, start_vertex, tree, bfs_order);
     GraphOperations::dfsTraversal(tree, start_vertex, query_graph->getVerticesCount(), order);
@@ -24,9 +24,10 @@ void GenerateFilteringPlan::generateTSOFilterPlan(Graph *data_graph, Graph *quer
 }
 
 void GenerateFilteringPlan::generateCFLFilterPlan(Graph *data_graph, Graph *query_graph, TreeNode *&tree,
-                                                  VertexID *&order, int &level_count, ui *&level_offset, bool isEigenCheck,int top_s) {
+                                                  VertexID *&order, int &level_count, ui *&level_offset, bool isEigenCheck,int top_s,
+                                                  MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue) {
     ui query_vertices_num = query_graph->getVerticesCount();
-    VertexID start_vertex = selectCFLFilterStartVertex(data_graph, query_graph,isEigenCheck,top_s);
+    VertexID start_vertex = selectCFLFilterStartVertex(data_graph, query_graph,isEigenCheck,top_s,querygraph_eigenvalue,datagraph_eigenvalue);
     GraphOperations::bfsTraversal(query_graph, start_vertex, tree, order);
 
     std::vector<ui> order_index(query_vertices_num);
