@@ -13,21 +13,21 @@ using namespace Eigen;
 
 class FilterVertices {
 public:
-    static bool EFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,int top_s);
     static bool LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,bool isEigenCheck,int top_s,
-                          MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue);
+                          vector<vector<double>> &querygraph_eigenvalue,vector<vector<double>> &datagraph_eigenvalue);
     static bool NLFFilter(Graph* data_graph, Graph* query_graph, ui** &candidates, ui* &candidates_count,bool isEigenCheck,int top_s,
-                          MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue);
+                          vector<vector<double>> &querygraph_eigenvalue,vector<vector<double>> &datagraph_eigenvalue);
     static bool GQLFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,bool isEigenCheck,int top_s,
-                          MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue);
+                          vector<vector<double>> &querygraph_eigenvalue,vector<vector<double>> &datagraph_eigenvalue);
     static bool TSOFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
                           ui *&order,TreeNode *&tree,bool isEigenCheck,int top_s,
-                          MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue);
+                          vector<vector<double>> &querygraph_eigenvalue,vector<vector<double>> &datagraph_eigenvalue);
     static bool CFLFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-                              ui *&order, TreeNode *&tree, bool isEigenCheck,int top_s,MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue);
+                              ui *&order, TreeNode *&tree, bool isEigenCheck,int top_s,
+                          vector<vector<double>> &querygraph_eigenvalue,vector<vector<double>> &datagraph_eigenvalue);
     static bool DPisoFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
                             ui *&order, TreeNode *&tree, bool isEigenCheck,int top_s,
-                            MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue);
+                            vector<vector<double>> &querygraph_eigenvalue,vector<vector<double>> &datagraph_eigenvalue);
 
     static bool CECIFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
                            ui *&order, TreeNode *&tree,   std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
@@ -36,7 +36,7 @@ public:
     // static bool VCFilter(const Graph* data_graph, const Graph* query_graph, ui **&candidates, ui *&candidates_count);
 
     static void computeCandidateWithNLF(Graph *data_graph, Graph *query_graph, VertexID query_vertex, ui &count, ui *buffer,
-                                 MatrixXd datagraph_eigen, MatrixXd querygraph_eigen, bool isEigenCheck, int top_s);
+                                        vector<vector<double>> &datagraph_eigen, vector<vector<double>> &querygraph_eigen, bool isEigenCheck, int top_s);
 
 
     static void computeCandidateWithLDF(Graph *data_graph, Graph *query_graph, VertexID query_vertex,
@@ -59,50 +59,11 @@ public:
     static double computeCandidatesFalsePositiveRatio(const Graph *data_graph, const Graph *query_graph, ui **candidates,
                                                           ui *candidates_count, std::vector<ui> &optimal_candidates_count);
 
-    static bool
-    LDFWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, ui *&order,
-               TreeNode *&tree,
-               std::vector<std::unordered_map<VertexID, std::vector<VertexID>>> &TE_Candidates,
-               std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,
-               bool isEigenCheck, int top_s);
-    static bool
-    NLFWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, ui *&order,
-               TreeNode *&tree,
-               std::vector<std::unordered_map<VertexID, std::vector<VertexID>>> &TE_Candidates,
-               std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,
-               bool isEigenCheck, int top_s);
 
-    static bool
-    GQLWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, ui *&order,
-               TreeNode *&tree,
-               std::vector<std::unordered_map<VertexID, std::vector<VertexID>>> &TE_Candidates,
-               std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,
-               bool isEigenCheck, int top_s);
-
-    static bool
-    TSOWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, ui *&order,
-               TreeNode *&tree,
-               std::vector<std::unordered_map<VertexID, std::vector<VertexID>>> &TE_Candidates,
-               std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,
-               bool isEigenCheck, int top_s);
-
-    static bool
-    CFLWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, ui *&order,
-               TreeNode *&tree,
-               std::vector<std::unordered_map<VertexID, std::vector<VertexID>>> &TE_Candidates,
-               std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,
-               bool isEigenCheck, int top_s);
-
-    static bool
-    DPisoWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, ui *&order,
-                      TreeNode *&tree, std::vector<std::unordered_map<VertexID, std::vector<VertexID>>> &TE_Candidates,
-                      std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,
-                      bool isEigenCheck, int top_s);
-
-    static void compactCandidatesWrapper(ui **&candidates, ui *&candidates_count, ui query_vertex_num,MatrixXd query_eigen,MatrixXd data_eigen,int top_s);
+    static void compactCandidatesWrapper(ui **&candidates, ui *&candidates_count, ui query_vertex_num,MatrixXd &query_eigen,MatrixXd &data_eigen,int top_s);
     static void generateCandidatesWrapper(const Graph *data_graph, const Graph *query_graph, VertexID query_vertex,
                                               VertexID *pivot_vertices, ui pivot_vertices_count, VertexID **candidates,
-                                              ui *candidates_count, ui *flag, ui *updated_flag,MatrixXd query_eigen,MatrixXd data_eigen,int top_s);
+                                              ui *candidates_count, ui *flag, ui *updated_flag,vector<vector<double>> &query_eigen,vector<vector<double>> &data_eigen,int top_s);
 private:
     static void allocateBuffer(const Graph* data_graph, const Graph* query_graph, ui** &candidates, ui* &candidates_count);
     static bool verifyExactTwigIso(const Graph *data_graph, const Graph *query_graph, ui data_vertex, ui query_vertex,

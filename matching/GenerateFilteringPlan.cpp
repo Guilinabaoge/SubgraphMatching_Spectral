@@ -15,7 +15,8 @@ using namespace Eigen;
 
 
 void GenerateFilteringPlan::generateTSOFilterPlan(Graph *data_graph, Graph *query_graph, TreeNode *&tree,
-                                                   VertexID *&order, int top_s,MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue) {
+                                                   VertexID *&order, int top_s,
+                                                   vector<vector<double>> &querygraph_eigenvalue,vector<vector<double>> &datagraph_eigenvalue) {
     VertexID start_vertex = selectTSOFilterStartVertex(data_graph, query_graph,top_s,querygraph_eigenvalue,datagraph_eigenvalue);
     VertexID* bfs_order;
     GraphOperations::bfsTraversal(query_graph, start_vertex, tree, bfs_order);
@@ -25,7 +26,7 @@ void GenerateFilteringPlan::generateTSOFilterPlan(Graph *data_graph, Graph *quer
 
 void GenerateFilteringPlan::generateCFLFilterPlan(Graph *data_graph, Graph *query_graph, TreeNode *&tree,
                                                   VertexID *&order, int &level_count, ui *&level_offset, bool isEigenCheck,int top_s,
-                                                  MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue) {
+                                                  vector<vector<double>> &querygraph_eigenvalue,vector<vector<double>> &datagraph_eigenvalue) {
     ui query_vertices_num = query_graph->getVerticesCount();
     VertexID start_vertex = selectCFLFilterStartVertex(data_graph, query_graph,isEigenCheck,top_s,querygraph_eigenvalue,datagraph_eigenvalue);
     GraphOperations::bfsTraversal(query_graph, start_vertex, tree, order);
@@ -117,39 +118,39 @@ void GenerateFilteringPlan::generateDPisoFilterPlan(Graph *data_graph, Graph *qu
     }
 }
 
-void GenerateFilteringPlan::generateCECIFilterPlan(Graph *data_graph, Graph *query_graph, TreeNode *&tree,
-                                                   VertexID *&order) {
-    VertexID start_vertex = selectCECIStartVertex(data_graph, query_graph);
-    GraphOperations::bfsTraversal(query_graph, start_vertex, tree, order);
-
-    ui query_vertices_num = query_graph->getVerticesCount();
-    std::vector<ui> order_index(query_vertices_num);
-    for (ui i = 0; i < query_vertices_num; ++i) {
-        VertexID query_vertex = order[i];
-        order_index[query_vertex] = i;
-    }
-
-    for (ui i = 0; i < query_vertices_num; ++i) {
-        VertexID u = order[i];
-        tree[u].under_level_count_ = 0;
-        tree[u].bn_count_ = 0;
-        tree[u].fn_count_ = 0;
-
-        ui u_nbrs_count;
-        const VertexID* u_nbrs = query_graph->getVertexNeighbors(u, u_nbrs_count);
-        for (ui j = 0; j < u_nbrs_count; ++j) {
-            VertexID u_nbr = u_nbrs[j];
-            if (u_nbr != tree[u].parent_ && order_index[u_nbr] < order_index[u]) {
-                tree[u].bn_[tree[u].bn_count_++] = u_nbr;
-                tree[u_nbr].fn_[tree[u_nbr].fn_count_++] = u;
-            }
-        }
-    }
-}
+//void GenerateFilteringPlan::generateCECIFilterPlan(Graph *data_graph, Graph *query_graph, TreeNode *&tree,
+//                                                   VertexID *&order) {
+//    VertexID start_vertex = selectCECIStartVertex(data_graph, query_graph);
+//    GraphOperations::bfsTraversal(query_graph, start_vertex, tree, order);
+//
+//    ui query_vertices_num = query_graph->getVerticesCount();
+//    std::vector<ui> order_index(query_vertices_num);
+//    for (ui i = 0; i < query_vertices_num; ++i) {
+//        VertexID query_vertex = order[i];
+//        order_index[query_vertex] = i;
+//    }
+//
+//    for (ui i = 0; i < query_vertices_num; ++i) {
+//        VertexID u = order[i];
+//        tree[u].under_level_count_ = 0;
+//        tree[u].bn_count_ = 0;
+//        tree[u].fn_count_ = 0;
+//
+//        ui u_nbrs_count;
+//        const VertexID* u_nbrs = query_graph->getVertexNeighbors(u, u_nbrs_count);
+//        for (ui j = 0; j < u_nbrs_count; ++j) {
+//            VertexID u_nbr = u_nbrs[j];
+//            if (u_nbr != tree[u].parent_ && order_index[u_nbr] < order_index[u]) {
+//                tree[u].bn_[tree[u].bn_count_++] = u_nbr;
+//                tree[u_nbr].fn_[tree[u_nbr].fn_count_++] = u;
+//            }
+//        }
+//    }
+//}
 
 
 VertexID GenerateFilteringPlan::selectTSOFilterStartVertex(Graph *data_graph, Graph *query_graph,int top_s,
-                                                           MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue) {
+                                                           vector<vector<double>> &querygraph_eigenvalue,vector<vector<double>> &datagraph_eigenvalue) {
     auto rank_compare = [](std::pair<VertexID, double> l, std::pair<VertexID, double> r) {
         return l.second < r.second;
     };
@@ -211,7 +212,7 @@ VertexID GenerateFilteringPlan::selectTSOFilterStartVertex(Graph *data_graph, Gr
 }
 
 VertexID GenerateFilteringPlan::selectCFLFilterStartVertex(Graph *data_graph, Graph *query_graph, bool isEigenCheck, int top_s,
-                                                           MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue) {
+                                                           vector<vector<double>> &querygraph_eigenvalue,vector<vector<double>> &datagraph_eigenvalue) {
     auto rank_compare = [](std::pair<VertexID, double> l, std::pair<VertexID, double> r) {
         return l.second < r.second;
     };
@@ -239,10 +240,6 @@ VertexID GenerateFilteringPlan::selectCFLFilterStartVertex(Graph *data_graph, Gr
     VertexID start_vertex = 0;
     double min_score = data_graph->getGraphMaxLabelFrequency() + 1;
 
-//    MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
-//    MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
-//    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
-//    datagraph_eigenvalue = Experiments::datagraphEigenMatrix;
 
     while (!rank_queue.empty()) {
         VertexID query_vertex = rank_queue.top().first;
@@ -285,22 +282,22 @@ VertexID GenerateFilteringPlan::selectDPisoStartVertex(Graph *data_graph, Graph 
     return start_vertex;
 }
 
-VertexID GenerateFilteringPlan::selectCECIStartVertex(Graph *data_graph, Graph *query_graph) {
-    double min_score = data_graph->getVerticesCount();
-    VertexID start_vertex = 0;
-
-    for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
-        ui degree = query_graph->getVertexDegree(i);
-        ui count = 0;
-        MatrixXd querygraph_eigenvalue(5,5);
-        MatrixXd datagraph_eigenvalue(5,5);
-        FilterVertices::computeCandidateWithNLF(data_graph, query_graph, i, count,NULL,datagraph_eigenvalue,querygraph_eigenvalue, false,10);
-        double cur_score = count / (double)degree;
-        if (cur_score < min_score) {
-            min_score = cur_score;
-            start_vertex = i;
-        }
-    }
-
-    return start_vertex;
-}
+//VertexID GenerateFilteringPlan::selectCECIStartVertex(Graph *data_graph, Graph *query_graph) {
+//    double min_score = data_graph->getVerticesCount();
+//    VertexID start_vertex = 0;
+//
+//    for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
+//        ui degree = query_graph->getVertexDegree(i);
+//        ui count = 0;
+//        MatrixXd querygraph_eigenvalue(5,5);
+//        MatrixXd datagraph_eigenvalue(5,5);
+//        FilterVertices::computeCandidateWithNLF(data_graph, query_graph, i, count,NULL,datagraph_eigenvalue,querygraph_eigenvalue, false,10);
+//        double cur_score = count / (double)degree;
+//        if (cur_score < min_score) {
+//            min_score = cur_score;
+//            start_vertex = i;
+//        }
+//    }
+//
+//    return start_vertex;
+//}

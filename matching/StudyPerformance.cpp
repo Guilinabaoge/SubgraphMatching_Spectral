@@ -109,7 +109,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     std::string input_filter_type = inputs.filter;
     std::string input_order_type = inputs.order;
     std::string input_engine_type = inputs.engine;
-    std::string input_max_embedding_num = "10000000";
+    std::string input_max_embedding_num = "100000";
     std::string input_time_limit = "600";
     std::string input_order_num = command.getOrderNum();
     std::string input_distribution_file_path = command.getDistributionFilePath();
@@ -208,14 +208,34 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
 
     MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
     MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
+
+    vector<vector<double>> query_eigen_vector;
+    vector<vector<double>> data_eigen_vector;
+
     if(isEigenCheck){
         auto start = std::chrono::high_resolution_clock::now();
         MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
         auto end = std::chrono::high_resolution_clock::now();
         double load_graphs_time_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
         outputs.eigenmatrix_time = NANOSECTOSEC(load_graphs_time_in_ns);
-
         datagraph_eigenvalue = Experiments::datagraphEigenMatrix;
+
+
+        int query_row = querygraph_eigenvalue.rows();
+        int data_row = datagraph_eigenvalue.rows();
+        for(int row=0; row<query_row; row++){
+            query_eigen_vector.push_back(vector<double>());
+            for(int col=0; col<top_s; col++) {
+                query_eigen_vector[row].push_back(querygraph_eigenvalue.row(row)[col]);
+            }
+        }
+
+        for(int row=0; row<data_row; row++){
+            data_eigen_vector.push_back(vector<double>());
+            for(int col=0; col<top_s; col++) {
+                data_eigen_vector[row].push_back(datagraph_eigenvalue.row(row)[col]);
+            }
+        }
     }
 
 
@@ -236,32 +256,31 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
 
 
     if (input_filter_type == "LDF") {
-        FilterVertices::LDFFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck,top_s,querygraph_eigenvalue,datagraph_eigenvalue);
+        FilterVertices::LDFFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck,top_s,query_eigen_vector,data_eigen_vector);
     } else if(input_filter_type=="KF"){
         SpectralMatching(query_graph->getVerticesCount(), data_graph, input_query_graph_file, true,candidates,candidates_count);
     }
     else if (input_filter_type == "NLF") {
-        FilterVertices::NLFFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck,top_s,querygraph_eigenvalue,datagraph_eigenvalue);
+        FilterVertices::NLFFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck,top_s,query_eigen_vector,data_eigen_vector);
     } else if (input_filter_type == "GQL") {
-        FilterVertices::GQLFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck,top_s,querygraph_eigenvalue,datagraph_eigenvalue);
+        FilterVertices::GQLFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck,top_s,query_eigen_vector,data_eigen_vector);
     } else if (input_filter_type == "TSO") {
         FilterVertices::TSOFilter(data_graph, query_graph, candidates, candidates_count, tso_order, tso_tree,isEigenCheck,top_s,
-                                  querygraph_eigenvalue,datagraph_eigenvalue);
+                                  query_eigen_vector,data_eigen_vector);
     } else if (input_filter_type == "CFL") {
         FilterVertices::CFLFilter(data_graph, query_graph, candidates, candidates_count, cfl_order, cfl_tree,isEigenCheck,top_s,
-                                  querygraph_eigenvalue,datagraph_eigenvalue);
+                                  query_eigen_vector,data_eigen_vector);
     } else if (input_filter_type == "DPiso") {
         FilterVertices::DPisoFilter(data_graph, query_graph, candidates, candidates_count, dpiso_order, dpiso_tree,isEigenCheck,top_s,
-                                    querygraph_eigenvalue,datagraph_eigenvalue);
+                                    query_eigen_vector,data_eigen_vector);
     } else if (input_filter_type == "CECI") {
-        FilterVertices::CECIFilter(data_graph, query_graph, candidates, candidates_count, ceci_order, ceci_tree, TE_Candidates, NTE_Candidates,isEigenCheck,top_s);
+//        FilterVertices::CECIFilter(data_graph, query_graph, candidates, candidates_count, ceci_order, ceci_tree, TE_Candidates, NTE_Candidates,isEigenCheck,top_s);
     }  else {
         std::cout << "The specified filter type '" << input_filter_type << "' is not supported." << std::endl;
         exit(-1);
     }
 
     // Sort the candidates to support the set intersections
-    // TODO figure out why CECI doesn't work, read the paper.
     if (input_filter_type != "CECI")
         FilterVertices::sortCandidates(candidates, candidates_count, query_graph->getVerticesCount());
 
@@ -360,7 +379,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     } else if (input_order_type == "TSO") {
         if (tso_tree == NULL) {
             GenerateFilteringPlan::generateTSOFilterPlan(data_graph, query_graph, tso_tree, tso_order,top_s,
-                                                         querygraph_eigenvalue,datagraph_eigenvalue);
+                                                         query_eigen_vector,data_eigen_vector);
         }
         GenerateQueryPlan::generateTSOQueryPlan(query_graph, edge_matrix, matching_order, pivots, tso_tree, tso_order);
     } else if (input_order_type == "CFL") {
@@ -368,7 +387,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
             int level_count;
             ui* level_offset;
             GenerateFilteringPlan::generateCFLFilterPlan(data_graph, query_graph, cfl_tree, cfl_order, level_count, level_offset,isEigenCheck,top_s,
-                                                         querygraph_eigenvalue,datagraph_eigenvalue);
+                                                         query_eigen_vector,data_eigen_vector);
             delete[] level_offset;
         }
         GenerateQueryPlan::generateCFLQueryPlan(data_graph, query_graph, edge_matrix, matching_order, pivots, cfl_tree, cfl_order, candidates_count);

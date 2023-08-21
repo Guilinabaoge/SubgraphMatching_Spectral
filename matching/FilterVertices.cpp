@@ -17,19 +17,15 @@
 #include "Experiments.h"
 
 #define INVALID_VERTEX_ID 100000000
+#define NANOSECTOSEC(elapsed_time) ((elapsed_time)/(double)1000000000)
 using namespace Eigen;
 
 
 
 bool
 FilterVertices::LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, bool isEigenCheck,int top_s,
-                          MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue) {
+                          vector<vector<double>> &querygraph_eigenvalue,vector<vector<double>> &datagraph_eigenvalue) {
     if (isEigenCheck){
-        allocateBuffer(data_graph, query_graph, candidates, candidates_count);
-        MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
-        MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
-        MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), 35);
-        datagraph_eigenvalue = Experiments::datagraphEigenMatrix;
 
         for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
             LabelID label = query_graph->getVertexLabel(i);
@@ -62,8 +58,8 @@ FilterVertices::LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
                     // Top Eigenvalue check
                     bool top_s_check = true;
                     for (ui e=0; e<top_s; e++){
-                        if ( datagraph_eigenvalue.row(data_vertex)[e] > querygraph_eigenvalue.row(i)[e]
-                        || abs(datagraph_eigenvalue.row(data_vertex)[e] - querygraph_eigenvalue.row(i)[e])<0.001){
+                        if ( datagraph_eigenvalue[data_vertex][e] > querygraph_eigenvalue[i][e]
+                        || abs(datagraph_eigenvalue[data_vertex][e] - querygraph_eigenvalue[i][e])<0.001){
                             top_s_check = true;
                         }
                         else{
@@ -134,7 +130,7 @@ FilterVertices::LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
 
 bool
 FilterVertices::NLFFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-                          bool isEigenCheck, int top_s,MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue) {
+                          bool isEigenCheck, int top_s,vector<vector<double>> &querygraph_eigenvalue, vector<vector<double>> &datagraph_eigenvalue) {
     allocateBuffer(data_graph, query_graph, candidates, candidates_count);
 
 
@@ -154,7 +150,7 @@ FilterVertices::NLFFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
 
 bool
 FilterVertices::GQLFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-                          bool isEigenCheck,int top_s,MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue) {
+                          bool isEigenCheck,int top_s,vector<vector<double>> &querygraph_eigenvalue,vector<vector<double>> &datagraph_eigenvalue) {
     // Local refinement.
     if (!NLFFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck,top_s,querygraph_eigenvalue,datagraph_eigenvalue))
         return false;
@@ -232,16 +228,12 @@ FilterVertices::GQLFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
 
 bool
 FilterVertices::TSOFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-                          ui *&order, TreeNode *&tree,bool isEigenCheck,int top_s,MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue) {
+                          ui *&order, TreeNode *&tree,bool isEigenCheck,int top_s,
+                          vector<vector<double>> &querygraph_eigenvalue,vector<vector<double>> &datagraph_eigenvalue) {
     allocateBuffer(data_graph, query_graph, candidates, candidates_count);
     GenerateFilteringPlan::generateTSOFilterPlan(data_graph, query_graph, tree, order,top_s,querygraph_eigenvalue,datagraph_eigenvalue);
 
     ui query_vertex_num = query_graph->getVerticesCount();
-
-//    MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
-//    MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
-//    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
-//    datagraph_eigenvalue = Experiments::datagraphEigenMatrix;
 
     // Get the candidates of the start vertex.
     VertexID start_vertex = order[0];
@@ -283,7 +275,8 @@ FilterVertices::TSOFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
 
 bool
 FilterVertices::CFLFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-                          ui *&order, TreeNode *&tree,bool isEigenCheck,int top_s,MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue) {
+                          ui *&order, TreeNode *&tree,bool isEigenCheck,int top_s,
+                          vector<vector<double>> &querygraph_eigenvalue,vector<vector<double>> &datagraph_eigenvalue) {
     allocateBuffer(data_graph, query_graph, candidates, candidates_count);
     int level_count;
     ui* level_offset;
@@ -298,12 +291,15 @@ FilterVertices::CFLFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
     ui* flag = new ui[data_graph->getVerticesCount()];
     std::fill(flag, flag + data_graph->getVerticesCount(), 0);
 
+
+    auto start = std::chrono::high_resolution_clock::now();
     // Top-down generation.
     for (int i = 1; i < level_count; ++i) {
         // Forward generation.
         for (int j = level_offset[i]; j < level_offset[i + 1]; ++j) {
             VertexID query_vertex = order[j];
             TreeNode& node = tree[query_vertex];
+
             if(isEigenCheck){
                 generateCandidatesWrapper(data_graph, query_graph, query_vertex, node.bn_, node.bn_count_,
                                           candidates, candidates_count, flag, updated_flag,querygraph_eigenvalue,datagraph_eigenvalue,top_s);
@@ -326,6 +322,10 @@ FilterVertices::CFLFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
             }
         }
     }
+
+    auto end = std::chrono::high_resolution_clock::now();
+    double loop_time = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+    cout<<NANOSECTOSEC(loop_time)<<endl;
 
     // Bottom-up refinement.
     for (int i = level_count - 2; i >= 0; --i) {
@@ -350,7 +350,7 @@ FilterVertices::CFLFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
 void
 FilterVertices::generateCandidatesWrapper(const Graph *data_graph, const Graph *query_graph, VertexID query_vertex,
                                    VertexID *pivot_vertices, ui pivot_vertices_count, VertexID **candidates,
-                                   ui *candidates_count, ui *flag, ui *updated_flag,MatrixXd query_eigen,MatrixXd data_eigen,int top_s) {
+                                   ui *candidates_count, ui *flag, ui *updated_flag,vector<vector<double>> &query_eigen,vector<vector<double>> &data_eigen,int top_s) {
     LabelID query_vertex_label = query_graph->getVertexLabel(query_vertex);
     ui query_vertex_degree = query_graph->getVertexDegree(query_vertex);
 #if OPTIMIZED_LABELED_GRAPH == 1
@@ -440,8 +440,8 @@ FilterVertices::generateCandidatesWrapper(const Graph *data_graph, const Graph *
                 // Top Eigenvalue check
                 bool top_s_check = true;
                 for (ui e=0; e<top_s; e++){
-                    if ( data_eigen.row(v)[e] > query_eigen.row(query_vertex)[e]
-                         || abs(data_eigen.row(v)[e] - query_eigen.row(query_vertex)[e])<0.001){
+                    if ( data_eigen[v][e] > query_eigen[query_vertex][e]
+                         || abs(data_eigen[v][e] - query_eigen[query_vertex][e])<0.001){
                         top_s_check = true;
                     }
                     else{
@@ -449,7 +449,6 @@ FilterVertices::generateCandidatesWrapper(const Graph *data_graph, const Graph *
                         break;
                     }
                 }
-
                 is_valid = is_valid && top_s_check;
 
                 if (is_valid) {
@@ -470,7 +469,7 @@ FilterVertices::generateCandidatesWrapper(const Graph *data_graph, const Graph *
 }
 
 void
-FilterVertices::compactCandidatesWrapper(ui **&candidates, ui *&candidates_count, ui query_vertex_num,MatrixXd query_eigen,MatrixXd data_eigen,int top_s){
+FilterVertices::compactCandidatesWrapper(ui **&candidates, ui *&candidates_count, ui query_vertex_num,MatrixXd &query_eigen,MatrixXd &data_eigen,int top_s){
     for (ui i = 0; i < query_vertex_num; ++i) {
         VertexID query_vertex = i;
         ui next_position = 0;
@@ -505,7 +504,8 @@ FilterVertices::compactCandidatesWrapper(ui **&candidates, ui *&candidates_count
 
 bool
 FilterVertices::DPisoFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-                            ui *&order, TreeNode *&tree, bool isEigenCheck, int top_s,MatrixXd querygraph_eigenvalue,MatrixXd datagraph_eigenvalue) {
+                            ui *&order, TreeNode *&tree, bool isEigenCheck, int top_s,
+                            vector<vector<double>> &querygraph_eigenvalue,vector<vector<double>> &datagraph_eigenvalue) {
     if (!LDFFilter(data_graph, query_graph, candidates, candidates_count,isEigenCheck,top_s,querygraph_eigenvalue,datagraph_eigenvalue))
         return false;
 
@@ -543,428 +543,387 @@ FilterVertices::DPisoFilter(Graph *data_graph, Graph *query_graph, ui **&candida
     return isCandidateSetValid(candidates, candidates_count, query_graph->getVerticesCount());
 }
 
-bool
-FilterVertices::CECIFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
-                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s) {
-    GenerateFilteringPlan::generateCECIFilterPlan(data_graph, query_graph, tree, order);
-
-    allocateBuffer(data_graph, query_graph, candidates, candidates_count);
-
-    ui query_vertices_count = query_graph->getVerticesCount();
-    ui data_vertices_count = data_graph->getVerticesCount();
-
-    MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
-    MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
-    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
-    datagraph_eigenvalue = Experiments::datagraphEigenMatrix;
-
-    // Find the pivots.
-    VertexID root = order[0];
-    computeCandidateWithNLF(data_graph, query_graph, root, candidates_count[root], candidates[root],datagraph_eigenvalue,querygraph_eigenvalue,isEigenCheck,top_s);
-
-    if (candidates_count[root] == 0)
-        return false;
-
-    // TE_Candidates construction and filtering.
-    std::vector<ui> updated_flag(data_vertices_count);
-    std::vector<ui> flag(data_vertices_count);
-    std::fill(flag.begin(), flag.end(), 0);
-    std::vector<bool> visited_query_vertex(query_vertices_count);
-    std::fill(visited_query_vertex.begin(), visited_query_vertex.end(), false);
-
-    visited_query_vertex[root] = true;
-
-    TE_Candidates.resize(query_vertices_count);
-
-    for (ui i = 1; i < query_vertices_count; ++i) {
-        VertexID u = order[i];
-        TreeNode& u_node = tree[u];
-        VertexID u_p = tree[u].parent_;
-
-        ui u_label = query_graph->getVertexLabel(u);
-        ui u_degree = query_graph->getVertexDegree(u);
-#if OPTIMIZED_LABELED_GRAPH == 1
-        const std::unordered_map<LabelID, ui>* u_nlf = query_graph->getVertexNLF(u);
-#endif
-        candidates_count[u] = 0;
-
-        visited_query_vertex[u] = true;
-        VertexID* frontiers = candidates[u_p];
-        ui frontiers_count = candidates_count[u_p];
-
-        for (ui j = 0; j < frontiers_count; ++j) {
-            VertexID v_f = frontiers[j];
-
-            if (v_f == INVALID_VERTEX_ID)
-                continue;
-
-            ui nbrs_cnt;
-            const VertexID* nbrs = data_graph->getVertexNeighbors(v_f, nbrs_cnt);
-
-            auto iter_pair = TE_Candidates[u].emplace(v_f, std::vector<VertexID>());
-            for (ui k = 0; k < nbrs_cnt; ++k) {
-                VertexID v = nbrs[k];
-
-                if (data_graph->getVertexLabel(v) == u_label && data_graph->getVertexDegree(v) >= u_degree) {
-
-                    // NLF check
-
-#if OPTIMIZED_LABELED_GRAPH == 1
-                    const std::unordered_map<LabelID, ui>* v_nlf = data_graph->getVertexNLF(v);
-
-                    if (v_nlf->size() >= u_nlf->size()) {
-                        bool is_valid = true;
-
-                        for (auto element : *u_nlf) {
-                            auto iter = v_nlf->find(element.first);
-                            if (iter == v_nlf->end() || iter->second < element.second) {
-                                is_valid = false;
-                                break;
-                            }
-                        }
-
-                        if (is_valid) {
-                            iter_pair.first->second.push_back(v);
-                            if (flag[v] == 0) {
-                                flag[v] = 1;
-                                candidates[u][candidates_count[u]++] = v;
-                            }
-                        }
-                    }
-#else
-                    iter_pair.first->second.push_back(v);
-                    if (flag[v] == 0) {
-                        flag[v] = 1;
-                        candidates[u][candidates_count[u]++] = v;
-                    }
-#endif
-                }
-            }
-
-            if (iter_pair.first->second.empty()) {
-                frontiers[j] = INVALID_VERTEX_ID;
-                for (ui k = 0; k < tree[u_p].children_count_; ++k) {
-                    VertexID u_c = tree[u_p].children_[k];
-                    if (visited_query_vertex[u_c]) {
-                        TE_Candidates[u_c].erase(v_f);
-                    }
-                }
-            }
-        }
-
-        if (candidates_count[u] == 0)
-            return false;
-
-        for (ui j = 0; j < candidates_count[u]; ++j) {
-            VertexID v = candidates[u][j];
-            flag[v] = 0;
-        }
-    }
-
-    // NTE_Candidates construction and filtering.
-    NTE_Candidates.resize(query_vertices_count);
-    for (auto& value : NTE_Candidates) {
-        value.resize(query_vertices_count);
-    }
-
-    for (ui i = 1; i < query_vertices_count; ++i) {
-        VertexID u = order[i];
-        TreeNode &u_node = tree[u];
-
-        ui u_label = query_graph->getVertexLabel(u);
-        ui u_degree = query_graph->getVertexDegree(u);
-#if OPTIMIZED_LABELED_GRAPH == 1
-        const std::unordered_map<LabelID, ui> *u_nlf = query_graph->getVertexNLF(u);
-#endif
-        for (ui l = 0; l < u_node.bn_count_; ++l) {
-            VertexID u_p = u_node.bn_[l];
-            VertexID *frontiers = candidates[u_p];
-            ui frontiers_count = candidates_count[u_p];
-
-            for (ui j = 0; j < frontiers_count; ++j) {
-                VertexID v_f = frontiers[j];
-
-                if (v_f == INVALID_VERTEX_ID)
-                    continue;
-
-                ui nbrs_cnt;
-                const VertexID *nbrs = data_graph->getVertexNeighbors(v_f, nbrs_cnt);
-
-                auto iter_pair = NTE_Candidates[u][u_p].emplace(v_f, std::vector<VertexID>());
-                for (ui k = 0; k < nbrs_cnt; ++k) {
-                    VertexID v = nbrs[k];
-
-                    if (data_graph->getVertexLabel(v) == u_label && data_graph->getVertexDegree(v) >= u_degree) {
-
-                        // NLF check
-#if OPTIMIZED_LABELED_GRAPH == 1
-                        const std::unordered_map<LabelID, ui> *v_nlf = data_graph->getVertexNLF(v);
-
-                        if (v_nlf->size() >= u_nlf->size()) {
-                            bool is_valid = true;
-
-                            for (auto element : *u_nlf) {
-                                auto iter = v_nlf->find(element.first);
-                                if (iter == v_nlf->end() || iter->second < element.second) {
-                                    is_valid = false;
-                                    break;
-                                }
-                            }
-
-                            if (is_valid) {
-                                iter_pair.first->second.push_back(v);
-                            }
-                        }
-#else
-                        iter_pair.first->second.push_back(v);
-#endif
-                    }
-                }
-
-                if (iter_pair.first->second.empty()) {
-                    frontiers[j] = INVALID_VERTEX_ID;
-                    for (ui k = 0; k < tree[u_p].children_count_; ++k) {
-                        VertexID u_c = tree[u_p].children_[k];
-                        TE_Candidates[u_c].erase(v_f);
-                    }
-                }
-            }
-        }
-    }
-
-    // Reverse BFS refine.
-    std::vector<std::vector<ui>> cardinality(query_vertices_count);
-    for (ui i = 0; i < query_vertices_count; ++i) {
-        cardinality[i].resize(candidates_count[i], 1);
-    }
-
-    std::vector<ui> local_cardinality(data_vertices_count);
-    std::fill(local_cardinality.begin(), local_cardinality.end(), 0);
-
-    for (int i = query_vertices_count - 1; i >= 0; --i) {
-        VertexID u = order[i];
-        TreeNode& u_node = tree[u];
-
-        ui flag_num = 0;
-        ui updated_flag_count = 0;
-
-        // Compute the intersection of TE_Candidates and NTE_Candidates.
-        for (ui j = 0; j < candidates_count[u]; ++j) {
-            VertexID v = candidates[u][j];
-
-            if (v == INVALID_VERTEX_ID)
-                continue;
-
-            if (flag[v] == flag_num) {
-                flag[v] += 1;
-                updated_flag[updated_flag_count++] = v;
-            }
-        }
-
-        for (ui j = 0; j < u_node.bn_count_; ++j) {
-            VertexID u_bn = u_node.bn_[j];
-            flag_num += 1;
-            for (auto iter = NTE_Candidates[u][u_bn].begin(); iter != NTE_Candidates[u][u_bn].end(); ++iter) {
-                for (auto v : iter->second) {
-                    if (flag[v] == flag_num) {
-                        flag[v] += 1;
-                    }
-                }
-            }
-        }
-
-        flag_num += 1;
-
-        // Get the cardinality of the candidates of u.
-        for (ui j = 0; j < candidates_count[u]; ++j) {
-            VertexID v = candidates[u][j];
-            if (v != INVALID_VERTEX_ID && flag[v] == flag_num) {
-                local_cardinality[v] = cardinality[u][j];
-            }
-            else {
-                cardinality[u][j] = 0;
-            }
-        }
-
-        VertexID u_p = u_node.parent_;
-        VertexID* frontiers = candidates[u_p];
-        ui frontiers_count = candidates_count[u_p];
-
-        // Loop over TE_Candidates.
-        for (ui j = 0; j < frontiers_count; ++j) {
-            VertexID v_f = frontiers[j];
-
-            if (v_f == INVALID_VERTEX_ID) {
-                cardinality[u_p][j] = 0;
-                continue;
-            }
-
-            ui temp_score = 0;
-            for (auto iter = TE_Candidates[u][v_f].begin(); iter != TE_Candidates[u][v_f].end();) {
-                VertexID v = *iter;
-                temp_score += local_cardinality[v];
-                if (local_cardinality[v] == 0) {
-                    iter = TE_Candidates[u][v_f].erase(iter);
-                    for (ui k = 0; k < u_node.children_count_; ++k) {
-                        VertexID u_c = u_node.children_[k];
-                        TE_Candidates[u_c].erase(v);
-                    }
-
-                    for (ui k = 0; k < u_node.fn_count_; ++k) {
-                        VertexID u_c = u_node.fn_[k];
-                        NTE_Candidates[u_c][u].erase(v);
-                    }
-                }
-                else {
-                    ++iter;
-                }
-            }
-
-            cardinality[u_p][j] *= temp_score;
-        }
-
-        // Clear updated flag.
-        for (ui j = 0; j < updated_flag_count; ++j) {
-            flag[updated_flag[j]] = 0;
-            local_cardinality[updated_flag[j]] = 0;
-        }
-    }
-
-    compactCandidates(candidates, candidates_count, query_vertices_count);
-    sortCandidates(candidates, candidates_count, query_vertices_count);
-
-
-    for (ui i = 0; i < query_vertices_count; ++i) {
-        if (candidates_count[i] == 0) {
-            return false;
-        }
-    }
-
-    for (ui i = 1; i < query_vertices_count; ++i) {
-        VertexID u = order[i];
-        TreeNode& u_node = tree[u];
-
-        // Clear TE_Candidates.
-        {
-            VertexID u_p = u_node.parent_;
-            auto iter = TE_Candidates[u].begin();
-            while (iter != TE_Candidates[u].end()) {
-                VertexID v_f = iter->first;
-                if (!std::binary_search(candidates[u_p], candidates[u_p] + candidates_count[u_p], v_f)) {
-                    iter = TE_Candidates[u].erase(iter);
-                }
-                else {
-                    std::sort(iter->second.begin(), iter->second.end());
-                    iter++;
-                }
-            }
-        }
-
-        // Clear NTE_Candidates.
-        {
-            for (ui j = 0; j < u_node.bn_count_; ++j) {
-                VertexID u_p = u_node.bn_[j];
-                auto iter = NTE_Candidates[u][u_p].end();
-                while (iter != NTE_Candidates[u][u_p].end()) {
-                    VertexID v_f = iter->first;
-                    if (!std::binary_search(candidates[u_p], candidates[u_p] + candidates_count[u_p], v_f)) {
-                        iter = NTE_Candidates[u][u_p].erase(iter);
-                    }
-                    else {
-                        std::sort(iter->second.begin(), iter->second.end());
-                        iter++;
-                    }
-                }
-            }
-        }
-    }
-
-//    for (ui i = 0; i < query_vertices_count; ++i) {
-//        VertexID u = i;
-//        std::cout << u << ':';
-//        for (ui j = 0; j < candidates_count[u]; ++j) {
-//            std::cout << candidates[u][j] << ' ';
+//bool
+//FilterVertices::CECIFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
+//                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
+//                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s) {
+//    GenerateFilteringPlan::generateCECIFilterPlan(data_graph, query_graph, tree, order);
+//
+//    allocateBuffer(data_graph, query_graph, candidates, candidates_count);
+//
+//    ui query_vertices_count = query_graph->getVerticesCount();
+//    ui data_vertices_count = data_graph->getVerticesCount();
+//
+//    MatrixXd querygraph_eigenvalue(query_graph->getVerticesCount(), top_s);
+//    MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
+//    MatrixXd datagraph_eigenvalue(data_graph->getVerticesCount(), top_s);
+//    datagraph_eigenvalue = Experiments::datagraphEigenMatrix;
+//
+//    // Find the pivots.
+//    VertexID root = order[0];
+//    computeCandidateWithNLF(data_graph, query_graph, root, candidates_count[root], candidates[root],datagraph_eigenvalue,querygraph_eigenvalue,isEigenCheck,top_s);
+//
+//    if (candidates_count[root] == 0)
+//        return false;
+//
+//    // TE_Candidates construction and filtering.
+//    std::vector<ui> updated_flag(data_vertices_count);
+//    std::vector<ui> flag(data_vertices_count);
+//    std::fill(flag.begin(), flag.end(), 0);
+//    std::vector<bool> visited_query_vertex(query_vertices_count);
+//    std::fill(visited_query_vertex.begin(), visited_query_vertex.end(), false);
+//
+//    visited_query_vertex[root] = true;
+//
+//    TE_Candidates.resize(query_vertices_count);
+//
+//    for (ui i = 1; i < query_vertices_count; ++i) {
+//        VertexID u = order[i];
+//        TreeNode& u_node = tree[u];
+//        VertexID u_p = tree[u].parent_;
+//
+//        ui u_label = query_graph->getVertexLabel(u);
+//        ui u_degree = query_graph->getVertexDegree(u);
+//#if OPTIMIZED_LABELED_GRAPH == 1
+//        const std::unordered_map<LabelID, ui>* u_nlf = query_graph->getVertexNLF(u);
+//#endif
+//        candidates_count[u] = 0;
+//
+//        visited_query_vertex[u] = true;
+//        VertexID* frontiers = candidates[u_p];
+//        ui frontiers_count = candidates_count[u_p];
+//
+//        for (ui j = 0; j < frontiers_count; ++j) {
+//            VertexID v_f = frontiers[j];
+//
+//            if (v_f == INVALID_VERTEX_ID)
+//                continue;
+//
+//            ui nbrs_cnt;
+//            const VertexID* nbrs = data_graph->getVertexNeighbors(v_f, nbrs_cnt);
+//
+//            auto iter_pair = TE_Candidates[u].emplace(v_f, std::vector<VertexID>());
+//            for (ui k = 0; k < nbrs_cnt; ++k) {
+//                VertexID v = nbrs[k];
+//
+//                if (data_graph->getVertexLabel(v) == u_label && data_graph->getVertexDegree(v) >= u_degree) {
+//
+//                    // NLF check
+//
+//#if OPTIMIZED_LABELED_GRAPH == 1
+//                    const std::unordered_map<LabelID, ui>* v_nlf = data_graph->getVertexNLF(v);
+//
+//                    if (v_nlf->size() >= u_nlf->size()) {
+//                        bool is_valid = true;
+//
+//                        for (auto element : *u_nlf) {
+//                            auto iter = v_nlf->find(element.first);
+//                            if (iter == v_nlf->end() || iter->second < element.second) {
+//                                is_valid = false;
+//                                break;
+//                            }
+//                        }
+//
+//                        if (is_valid) {
+//                            iter_pair.first->second.push_back(v);
+//                            if (flag[v] == 0) {
+//                                flag[v] = 1;
+//                                candidates[u][candidates_count[u]++] = v;
+//                            }
+//                        }
+//                    }
+//#else
+//                    iter_pair.first->second.push_back(v);
+//                    if (flag[v] == 0) {
+//                        flag[v] = 1;
+//                        candidates[u][candidates_count[u]++] = v;
+//                    }
+//#endif
+//                }
+//            }
+//
+//            if (iter_pair.first->second.empty()) {
+//                frontiers[j] = INVALID_VERTEX_ID;
+//                for (ui k = 0; k < tree[u_p].children_count_; ++k) {
+//                    VertexID u_c = tree[u_p].children_[k];
+//                    if (visited_query_vertex[u_c]) {
+//                        TE_Candidates[u_c].erase(v_f);
+//                    }
+//                }
+//            }
 //        }
-//        std::cout << std::endl;
+//
+//        if (candidates_count[u] == 0)
+//            return false;
+//
+//        for (ui j = 0; j < candidates_count[u]; ++j) {
+//            VertexID v = candidates[u][j];
+//            flag[v] = 0;
+//        }
+//    }
+//
+//    // NTE_Candidates construction and filtering.
+//    NTE_Candidates.resize(query_vertices_count);
+//    for (auto& value : NTE_Candidates) {
+//        value.resize(query_vertices_count);
 //    }
 //
 //    for (ui i = 1; i < query_vertices_count; ++i) {
 //        VertexID u = order[i];
-//        // TE_Candidates
-//        std::cout << "TE_Candidates: " << u << ',' << tree[u].parent_ << std::endl;
-//        for (auto iter = TE_Candidates[u].begin(); iter != TE_Candidates[u].end(); ++iter) {
-//            std::cout << iter->first << ": ";
-//            for (auto v : iter->second) {
-//                std::cout << v << ' ';
-//                if (!data_graph->checkEdgeExistence(iter->first, v)) {
-//                    std::cout << "Edge does not exist" << std::endl;
-//                }
-//            }
-//            std::cout << std::endl;
-//        }
-//        std::cout << "-----" << std::endl;
-//        for (ui j = 0; j < tree[u].bn_count_; ++j) {
-//            VertexID u_bn = tree[u].bn_[j];
-//            std::cout << "NTE_Candidates: " << u << ',' << u_bn << std::endl;
-//            for (auto iter = NTE_Candidates[u][u_bn].begin(); iter != NTE_Candidates[u][u_bn].end(); ++iter) {
-//                std::cout << iter->first << ": ";
-//                for (auto v : iter->second) {
-//                    std::cout << v << ' ';
-//                    if (!data_graph->checkEdgeExistence(iter->first, v)) {
-//                        std::cout << "Edge does not exist" << std::endl;
+//        TreeNode &u_node = tree[u];
+//
+//        ui u_label = query_graph->getVertexLabel(u);
+//        ui u_degree = query_graph->getVertexDegree(u);
+//#if OPTIMIZED_LABELED_GRAPH == 1
+//        const std::unordered_map<LabelID, ui> *u_nlf = query_graph->getVertexNLF(u);
+//#endif
+//        for (ui l = 0; l < u_node.bn_count_; ++l) {
+//            VertexID u_p = u_node.bn_[l];
+//            VertexID *frontiers = candidates[u_p];
+//            ui frontiers_count = candidates_count[u_p];
+//
+//            for (ui j = 0; j < frontiers_count; ++j) {
+//                VertexID v_f = frontiers[j];
+//
+//                if (v_f == INVALID_VERTEX_ID)
+//                    continue;
+//
+//                ui nbrs_cnt;
+//                const VertexID *nbrs = data_graph->getVertexNeighbors(v_f, nbrs_cnt);
+//
+//                auto iter_pair = NTE_Candidates[u][u_p].emplace(v_f, std::vector<VertexID>());
+//                for (ui k = 0; k < nbrs_cnt; ++k) {
+//                    VertexID v = nbrs[k];
+//
+//                    if (data_graph->getVertexLabel(v) == u_label && data_graph->getVertexDegree(v) >= u_degree) {
+//
+//                        // NLF check
+//#if OPTIMIZED_LABELED_GRAPH == 1
+//                        const std::unordered_map<LabelID, ui> *v_nlf = data_graph->getVertexNLF(v);
+//
+//                        if (v_nlf->size() >= u_nlf->size()) {
+//                            bool is_valid = true;
+//
+//                            for (auto element : *u_nlf) {
+//                                auto iter = v_nlf->find(element.first);
+//                                if (iter == v_nlf->end() || iter->second < element.second) {
+//                                    is_valid = false;
+//                                    break;
+//                                }
+//                            }
+//
+//                            if (is_valid) {
+//                                iter_pair.first->second.push_back(v);
+//                            }
+//                        }
+//#else
+//                        iter_pair.first->second.push_back(v);
+//#endif
 //                    }
 //                }
-//                std::cout << std::endl;
+//
+//                if (iter_pair.first->second.empty()) {
+//                    frontiers[j] = INVALID_VERTEX_ID;
+//                    for (ui k = 0; k < tree[u_p].children_count_; ++k) {
+//                        VertexID u_c = tree[u_p].children_[k];
+//                        TE_Candidates[u_c].erase(v_f);
+//                    }
+//                }
 //            }
-//            std::cout << "-----" << std::endl;
 //        }
 //    }
+//
+//    // Reverse BFS refine.
+//    std::vector<std::vector<ui>> cardinality(query_vertices_count);
+//    for (ui i = 0; i < query_vertices_count; ++i) {
+//        cardinality[i].resize(candidates_count[i], 1);
+//    }
+//
+//    std::vector<ui> local_cardinality(data_vertices_count);
+//    std::fill(local_cardinality.begin(), local_cardinality.end(), 0);
+//
+//    for (int i = query_vertices_count - 1; i >= 0; --i) {
+//        VertexID u = order[i];
+//        TreeNode& u_node = tree[u];
+//
+//        ui flag_num = 0;
+//        ui updated_flag_count = 0;
+//
+//        // Compute the intersection of TE_Candidates and NTE_Candidates.
+//        for (ui j = 0; j < candidates_count[u]; ++j) {
+//            VertexID v = candidates[u][j];
+//
+//            if (v == INVALID_VERTEX_ID)
+//                continue;
+//
+//            if (flag[v] == flag_num) {
+//                flag[v] += 1;
+//                updated_flag[updated_flag_count++] = v;
+//            }
+//        }
+//
+//        for (ui j = 0; j < u_node.bn_count_; ++j) {
+//            VertexID u_bn = u_node.bn_[j];
+//            flag_num += 1;
+//            for (auto iter = NTE_Candidates[u][u_bn].begin(); iter != NTE_Candidates[u][u_bn].end(); ++iter) {
+//                for (auto v : iter->second) {
+//                    if (flag[v] == flag_num) {
+//                        flag[v] += 1;
+//                    }
+//                }
+//            }
+//        }
+//
+//        flag_num += 1;
+//
+//        // Get the cardinality of the candidates of u.
+//        for (ui j = 0; j < candidates_count[u]; ++j) {
+//            VertexID v = candidates[u][j];
+//            if (v != INVALID_VERTEX_ID && flag[v] == flag_num) {
+//                local_cardinality[v] = cardinality[u][j];
+//            }
+//            else {
+//                cardinality[u][j] = 0;
+//            }
+//        }
+//
+//        VertexID u_p = u_node.parent_;
+//        VertexID* frontiers = candidates[u_p];
+//        ui frontiers_count = candidates_count[u_p];
+//
+//        // Loop over TE_Candidates.
+//        for (ui j = 0; j < frontiers_count; ++j) {
+//            VertexID v_f = frontiers[j];
+//
+//            if (v_f == INVALID_VERTEX_ID) {
+//                cardinality[u_p][j] = 0;
+//                continue;
+//            }
+//
+//            ui temp_score = 0;
+//            for (auto iter = TE_Candidates[u][v_f].begin(); iter != TE_Candidates[u][v_f].end();) {
+//                VertexID v = *iter;
+//                temp_score += local_cardinality[v];
+//                if (local_cardinality[v] == 0) {
+//                    iter = TE_Candidates[u][v_f].erase(iter);
+//                    for (ui k = 0; k < u_node.children_count_; ++k) {
+//                        VertexID u_c = u_node.children_[k];
+//                        TE_Candidates[u_c].erase(v);
+//                    }
+//
+//                    for (ui k = 0; k < u_node.fn_count_; ++k) {
+//                        VertexID u_c = u_node.fn_[k];
+//                        NTE_Candidates[u_c][u].erase(v);
+//                    }
+//                }
+//                else {
+//                    ++iter;
+//                }
+//            }
+//
+//            cardinality[u_p][j] *= temp_score;
+//        }
+//
+//        // Clear updated flag.
+//        for (ui j = 0; j < updated_flag_count; ++j) {
+//            flag[updated_flag[j]] = 0;
+//            local_cardinality[updated_flag[j]] = 0;
+//        }
+//    }
+//
+//    compactCandidates(candidates, candidates_count, query_vertices_count);
+//    sortCandidates(candidates, candidates_count, query_vertices_count);
+//
+//
+//    for (ui i = 0; i < query_vertices_count; ++i) {
+//        if (candidates_count[i] == 0) {
+//            return false;
+//        }
+//    }
+//
+//    for (ui i = 1; i < query_vertices_count; ++i) {
+//        VertexID u = order[i];
+//        TreeNode& u_node = tree[u];
+//
+//        // Clear TE_Candidates.
+//        {
+//            VertexID u_p = u_node.parent_;
+//            auto iter = TE_Candidates[u].begin();
+//            while (iter != TE_Candidates[u].end()) {
+//                VertexID v_f = iter->first;
+//                if (!std::binary_search(candidates[u_p], candidates[u_p] + candidates_count[u_p], v_f)) {
+//                    iter = TE_Candidates[u].erase(iter);
+//                }
+//                else {
+//                    std::sort(iter->second.begin(), iter->second.end());
+//                    iter++;
+//                }
+//            }
+//        }
+//
+//        // Clear NTE_Candidates.
+//        {
+//            for (ui j = 0; j < u_node.bn_count_; ++j) {
+//                VertexID u_p = u_node.bn_[j];
+//                auto iter = NTE_Candidates[u][u_p].end();
+//                while (iter != NTE_Candidates[u][u_p].end()) {
+//                    VertexID v_f = iter->first;
+//                    if (!std::binary_search(candidates[u_p], candidates[u_p] + candidates_count[u_p], v_f)) {
+//                        iter = NTE_Candidates[u][u_p].erase(iter);
+//                    }
+//                    else {
+//                        std::sort(iter->second.begin(), iter->second.end());
+//                        iter++;
+//                    }
+//                }
+//            }
+//        }
+//    }
+//
+////    for (ui i = 0; i < query_vertices_count; ++i) {
+////        VertexID u = i;
+////        std::cout << u << ':';
+////        for (ui j = 0; j < candidates_count[u]; ++j) {
+////            std::cout << candidates[u][j] << ' ';
+////        }
+////        std::cout << std::endl;
+////    }
+////
+////    for (ui i = 1; i < query_vertices_count; ++i) {
+////        VertexID u = order[i];
+////        // TE_Candidates
+////        std::cout << "TE_Candidates: " << u << ',' << tree[u].parent_ << std::endl;
+////        for (auto iter = TE_Candidates[u].begin(); iter != TE_Candidates[u].end(); ++iter) {
+////            std::cout << iter->first << ": ";
+////            for (auto v : iter->second) {
+////                std::cout << v << ' ';
+////                if (!data_graph->checkEdgeExistence(iter->first, v)) {
+////                    std::cout << "Edge does not exist" << std::endl;
+////                }
+////            }
+////            std::cout << std::endl;
+////        }
+////        std::cout << "-----" << std::endl;
+////        for (ui j = 0; j < tree[u].bn_count_; ++j) {
+////            VertexID u_bn = tree[u].bn_[j];
+////            std::cout << "NTE_Candidates: " << u << ',' << u_bn << std::endl;
+////            for (auto iter = NTE_Candidates[u][u_bn].begin(); iter != NTE_Candidates[u][u_bn].end(); ++iter) {
+////                std::cout << iter->first << ": ";
+////                for (auto v : iter->second) {
+////                    std::cout << v << ' ';
+////                    if (!data_graph->checkEdgeExistence(iter->first, v)) {
+////                        std::cout << "Edge does not exist" << std::endl;
+////                    }
+////                }
+////                std::cout << std::endl;
+////            }
+////            std::cout << "-----" << std::endl;
+////        }
+////    }
+//
+//    return true;
+//}
 
-    return true;
-}
-
-//bool
-//FilterVertices::LDFWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-//                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
-//                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s){
-//    return FilterVertices::LDFFilter(data_graph,query_graph,candidates,candidates_count,isEigenCheck,top_s);
-//}
-//
-//bool
-//FilterVertices::NLFWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-//                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
-//                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s){
-//    return FilterVertices::NLFFilter(data_graph,query_graph,candidates,candidates_count,isEigenCheck,top_s);
-//}
-//
-//bool
-//FilterVertices::GQLWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-//                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
-//                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s){
-//    return FilterVertices::GQLFilter(data_graph,query_graph,candidates,candidates_count,isEigenCheck,top_s);
-//}
-//
-//bool
-//FilterVertices::TSOWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-//                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
-//                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s){
-//    return FilterVertices::TSOFilter(data_graph,query_graph,candidates,candidates_count,order,tree,isEigenCheck,top_s);
-//}
-//
-//bool
-//FilterVertices::CFLWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-//                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
-//                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s){
-//    return FilterVertices::CFLFilter(data_graph,query_graph,candidates,candidates_count,order,tree,isEigenCheck,top_s);
-//}
-//
-//bool
-//FilterVertices::DPisoWrapper(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count,
-//                           ui *&order, TreeNode *&tree,  std::vector<std::unordered_map<VertexID, std::vector<VertexID >>> &TE_Candidates,
-//                           std::vector<std::vector<std::unordered_map<VertexID, std::vector<VertexID>>>> &NTE_Candidates,bool isEigenCheck,int top_s){
-//    return FilterVertices::DPisoFilter(data_graph,query_graph,candidates,candidates_count,order,tree,isEigenCheck,top_s);
-//}
 
 
 
@@ -1051,7 +1010,8 @@ bool FilterVertices::isCandidateSetValid(ui **&candidates, ui *&candidates_count
 
 void
 FilterVertices::computeCandidateWithNLF(Graph *data_graph, Graph *query_graph, VertexID query_vertex,
-                                               ui &count, ui *buffer,  MatrixXd datagraph_eigen, MatrixXd querygraph_eigen,bool isEigenCheck,int top_s) {
+                                               ui &count, ui *buffer, vector<vector<double>> &datagraph_eigen,
+                                               vector<vector<double>> &querygraph_eigen,bool isEigenCheck,int top_s) {
     LabelID label = query_graph->getVertexLabel(query_vertex);
     ui degree = query_graph->getVertexDegree(query_vertex);
 #if OPTIMIZED_LABELED_GRAPH == 1
@@ -1154,8 +1114,8 @@ FilterVertices::computeCandidateWithNLF(Graph *data_graph, Graph *query_graph, V
                     if (isEigenCheck){
                         bool top_s_check = true;
                         for (ui e=0; e<top_s; e++){
-                            if (datagraph_eigen.row(data_vertex)[e] > querygraph_eigen.row(query_vertex)[e]
-                            || abs(datagraph_eigen.row(data_vertex)[e] - querygraph_eigen.row(query_vertex)[e]) < 0.001){
+                            if (datagraph_eigen[data_vertex][e] > querygraph_eigen[query_vertex][e]
+                            || abs(datagraph_eigen[data_vertex][e] - querygraph_eigen[query_vertex][e]) < 0.001){
                                 top_s_check = true;
                             }
                             else{

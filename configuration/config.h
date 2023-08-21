@@ -9,7 +9,7 @@
 /**
  * Set the maximum size of a query graph. By default, we set the value as 64.
  */
-#define MAXIMUM_QUERY_GRAPH_SIZE 64
+#define MAXIMUM_QUERY_GRAPH_SIZE 128
 
 /**
  * Setting the value as 1 is to (1) enable the neighbor label frequency filter (i.e., NLF filter); and (2) enable
