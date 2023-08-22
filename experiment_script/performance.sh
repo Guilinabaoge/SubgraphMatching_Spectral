@@ -23,7 +23,7 @@ else
       for j in 64;
       do
       (cd ../cmake-build-debug/matching;
-      timeout 600s ./SubgraphMatching.out -dataset "$3"  -qsize "$j" -qnumber "$i" -qprop "$p" -wildcard "$4" -filter "$5" -eigen "$6" -order "$7")
+      timeout 600s ./SubgraphMatching.out -dataset "$3"  -qsize "$j" -qnumber "$i" -qprop "$p" -wildcard "$4" -filter "$5" -eigen "$6" -order "$8")
       done
     done
   done
