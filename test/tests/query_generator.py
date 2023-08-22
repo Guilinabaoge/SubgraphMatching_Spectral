@@ -4,6 +4,7 @@ import argparse
 import itertools
 import graph_parser as gp
 import os
+import time
 
 
 
@@ -58,8 +59,10 @@ def generate_small_world_subgraph(size,path):
             f.write('e ' + str(edge[0]) + ' ' + str(edge[1]) + ' ' +  '0' + '\n')
 
 # Generate a subgraph of datagraph by randomwalk
-def randomwalk(datagraph_path,size,prop): 
-    G = gp.graph_parser(datagraph_path)
+def randomwalk(datagraph,size,prop):
+    current_time = time.strftime("%Y-%m-%d %H:%M:%S")
+    print("Current system time 1:", current_time)
+    G = datagraph
     current_node = random.choice(list(G.nodes()))
     query = nx.Graph()
     counter = 0
@@ -67,13 +70,19 @@ def randomwalk(datagraph_path,size,prop):
     while query.number_of_nodes() < size:
         if counter > 500:
             print('counter exceed 500')
-            return randomwalk(datagraph_path,size,prop)
+            return randomwalk(datagraph,size,prop)
         neighbors = list(G.neighbors(current_node))
+
+        # for n in neighbors:
+        #     query.add_edge(current_node,n)
+
         destination = random.choice(neighbors)
         query.add_node(current_node,label=G.nodes[current_node]['label']) 
         current_node = destination
-        counter+=1
-    
+        counter += 1
+
+    current_time = time.strftime("%Y-%m-%d %H:%M:%S")
+    print("Current system time 2:", current_time)
     for edge in G.edges():
         if edge[0] in query.nodes() and edge[1] in query.nodes():
             query.add_edge(edge[0],edge[1])
@@ -83,13 +92,15 @@ def randomwalk(datagraph_path,size,prop):
         mapping = {node:counter}
         query = nx.relabel_nodes(query,mapping)
         counter += 1
-    
-        
+
+    current_time = time.strftime("%Y-%m-%d %H:%M:%S")
+    print("Current system time 3:", current_time)
+
     if nx.is_connected(query) and query.number_of_nodes() == size:
         degrees = dict(query.degree())
         avg_degree = sum(degrees.values()) / len(degrees)
         print(avg_degree)
-        if prop == "dense" and avg_degree >= 2:
+        if prop == "dense" and avg_degree >= 3:
                 print('query generated successfully')
                 return query
         elif prop == "sparse" and avg_degree < 3:
@@ -97,11 +108,11 @@ def randomwalk(datagraph_path,size,prop):
                 return query
         else:
             print('Invalid prop: {0} or unsatisfy degree: {1}'.format(prop,avg_degree))
-            return randomwalk(datagraph_path,size,prop)
+            return randomwalk(datagraph,size,prop)
 
     else:
         print('query not generated successfully')
-        return randomwalk(datagraph_path,size,prop)
+        return randomwalk(datagraph,size,prop)
 
 
  
@@ -121,7 +132,8 @@ def main():
 
 
     for query_number in range(1,2):
-        G = randomwalk(datagraphpath,size,prop)
+        datagraph = gp.graph_parser(datagraphpath)
+        G = randomwalk(datagraph,size,prop)
         store_path = f"wildcard_queries/{dataset}/0.0/query_{prop}_{size}_{query_number}.graph"
         # if not os.path.exists(store_path):
         #     os.makedirs(store_path)

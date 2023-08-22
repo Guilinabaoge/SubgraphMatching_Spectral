@@ -93,8 +93,8 @@ int main(int argc, char** argv) {
 
     cout<<var<<endl;
 
-//    string file_path = "../../performance_experiment/"+order+"/"+wildcard_percentage+"/"+dataset_name+"/"+dataset_name+"_"+query_property+query_size+".csv";
-    string file_path = "../../performance_experiment/patents-test.csv";
+    string file_path = "../../performance_experiment/"+order+"/"+wildcard_percentage+"/"+dataset_name+"/"+dataset_name+"_"+query_property+query_size+".csv";
+//    string file_path = "../../performance_experiment/patents-test.csv";
     cout<<file_path<<endl;
     std::ofstream myfile;
     myfile.open (file_path,std::ios_base::app);

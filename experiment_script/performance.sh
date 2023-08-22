@@ -6,7 +6,7 @@ if [ "$7" = "32" ]; then
     do
     for i in $(seq "$1" "$2")
     do
-      for j in 16 24 32;
+      for j in 64;
       do
       (cd ../cmake-build-debug/matching;
       timeout 600s ./SubgraphMatching.out -dataset "$3"  -qsize "$j" -qnumber "$i" -qprop "$p" -wildcard "$4" -filter "$5" -eigen "$6" -order "$8")
@@ -19,7 +19,8 @@ else
     do
     for i in $(seq "$1" "$2")
     do
-      for j in 12 16 20;
+#      for j in 12 16 20;
+      for j in 64;
       do
       (cd ../cmake-build-debug/matching;
       timeout 600s ./SubgraphMatching.out -dataset "$3"  -qsize "$j" -qnumber "$i" -qprop "$p" -wildcard "$4" -filter "$5" -eigen "$6" -order "$7")
