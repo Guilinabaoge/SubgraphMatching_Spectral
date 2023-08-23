@@ -103,12 +103,14 @@ void StudyPerformance::spectrum_analysis(Graph* data_graph, Graph* query_graph, 
 matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inputs){
     int argc = 0;
     char** argv;
+
     MatchingCommand command(argc, argv);
     std::string input_query_graph_file = inputs.qgraph_path;
     std::string input_data_graph_file = inputs.dgraph_path;
     std::string input_filter_type = inputs.filter;
     std::string input_order_type = inputs.order;
     std::string input_engine_type = inputs.engine;
+//    std::string input_max_embedding_num = "100000000";
     std::string input_max_embedding_num = "100000000";
     std::string input_time_limit = "600";
     std::string input_order_num = command.getOrderNum();
@@ -212,6 +214,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
     vector<vector<double>> query_eigen_vector;
     vector<vector<double>> data_eigen_vector;
 
+
     if(isEigenCheck){
         auto start = std::chrono::high_resolution_clock::now();
         MTcalc12(query_graph,query_graph->getGraphMaxDegree(),querygraph_eigenvalue,true,top_s);
@@ -286,6 +289,7 @@ matching_algo_outputs StudyPerformance::solveGraphQuery(matching_algo_inputs inp
 
     end = std::chrono::high_resolution_clock::now();
     double filter_vertices_time_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+
 
     int sum = 0;
     outputs.candidate_count_sum = accumulate(candidates_count, candidates_count + query_graph->getVerticesCount(), sum);

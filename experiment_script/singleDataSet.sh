@@ -47,14 +47,15 @@ byobu split-window -v
 #read order
 
 
-filters=("LDF" "NLF" "GQL" "TSO" "CFL" "DPiso")
+#filters=("LDF" "NLF" "GQL" "TSO" "CFL" "DPiso")
+filters=("LDF" "DPiso")
 counter=0 
-for element in "${filters[@]}"
-do
-	byobu select-pane -t "$counter"
-	byobu send-keys "./performance.sh 1 30 $1 $2 $element 0 $3 $4" Enter
-	((counter++))
-done
+#for element in "${filters[@]}"
+#do
+#	byobu select-pane -t "$counter"
+#	byobu send-keys "./performance.sh 1 30 $1 $2 $element 0 $3 $4" Enter
+#	((counter++))
+#done
 
 for element in "${filters[@]}"
 do

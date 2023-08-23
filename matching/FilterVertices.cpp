@@ -26,7 +26,7 @@ bool
 FilterVertices::LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidates, ui *&candidates_count, bool isEigenCheck,int top_s,
                           vector<vector<double>> &querygraph_eigenvalue,vector<vector<double>> &datagraph_eigenvalue) {
     if (isEigenCheck){
-
+        allocateBuffer(data_graph, query_graph, candidates, candidates_count);
         for (ui i = 0; i < query_graph->getVerticesCount(); ++i) {
             LabelID label = query_graph->getVertexLabel(i);
             ui degree = query_graph->getVertexDegree(i);
@@ -73,7 +73,7 @@ FilterVertices::LDFFilter(Graph *data_graph, Graph *query_graph, ui **&candidate
                 }
             }
             delete[] data_vertices;
-            if (candidates_count[i] == 0) {
+            if ( candidates_count[i] == 0) {
                 return false;
             }
         }
