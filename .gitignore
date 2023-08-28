@@ -1,8 +1,8 @@
 /cmake-build-debug
 /cmake-build-debug-docker
 /test/reallife_dataset
-/test/wildcard
 /test/graph_gen
-/performance_build
+/test/wildcard
 /eigenmatrices
+/performance_build
 /build

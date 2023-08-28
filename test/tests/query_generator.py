@@ -73,9 +73,7 @@ def randomwalk(datagraph,size,prop):
             return randomwalk(datagraph,size,prop)
         neighbors = list(G.neighbors(current_node))
 
-        # for n in neighbors:
-        #     query.add_edge(current_node,n)
-
+        #TODO handle the situation of isolated node, where no label exist
         destination = random.choice(neighbors)
         query.add_node(current_node,label=G.nodes[current_node]['label']) 
         current_node = destination
@@ -131,7 +129,7 @@ def main():
     # query_store_path = f"{dataset}/{size}/"
 
 
-    for query_number in range(1,2):
+    for query_number in range(1,51):
         datagraph = gp.graph_parser(datagraphpath)
         G = randomwalk(datagraph,size,prop)
         store_path = f"wildcard_queries/{dataset}/0.0/query_{prop}_{size}_{query_number}.graph"

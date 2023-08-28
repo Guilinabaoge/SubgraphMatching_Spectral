@@ -52,14 +52,14 @@ counter=0
 for element in "${filters[@]}"
 do
 	byobu select-pane -t "$counter"
-	byobu send-keys "./performance.sh 1 30 $1 $2 $element 0 $3 $4" Enter
+	byobu send-keys "./performance.sh 1 50 $1 $2 $element 0 $3 $4" Enter
 	((counter++))
 done
 
 for element in "${filters[@]}"
 do
 	byobu select-pane -t "$counter"
-	byobu send-keys "./performance.sh 1 30 $1 $2 $element 1 $3 $4" Enter
+	byobu send-keys "./performance.sh 1 50 $1 $2 $element 1 $3 $4" Enter
 	((counter++))
 done
 

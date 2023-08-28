@@ -23,7 +23,7 @@ def wildcard(query,percentage,query_size,query_number,dataset,prop):
     for e in rand_nums:
         G.nodes[e]["label"] = wildcard_label[dataset]
 
-    store_path = 'wildcard_queries/{0}/{1}/query_{2}_{3}_{4}.graph'.format(dataset,percentage,prop,query_size,query_number)
+    store_path =  f"wildcard_queries/{dataset}/{percentage}/query_{prop}_{query_size}_{query_number}.graph"
     os.makedirs(os.path.dirname(store_path), exist_ok=True)
     with open(store_path,'w') as f: 
         f.write('t ' + str(len(G.nodes())) + ' ' + str(len(G.edges())) + '\n')
@@ -53,9 +53,9 @@ def main():
     query_size = int(args.size)
     prop = args.property
     dataset = args.dataset
-    query_path = f"wildcard_queries/{dataset}/0.0/query_{prop}_{query_size}_1.graph"
     percentage = float(args.wildcard_percentage)
     query_number = int(args.query_number)
+    query_path = f"wildcard_queries/{dataset}/0.0/query_{prop}_{query_size}_{query_number}.graph"
     wildcard(query_path,percentage,query_size,query_number,dataset,prop)
 
 if __name__ == '__main__':
