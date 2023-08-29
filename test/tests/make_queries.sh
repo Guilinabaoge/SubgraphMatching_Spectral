@@ -16,6 +16,6 @@ for dataset in "${datasets[@]}"
   do
     for query_number in $(seq 1 50)
       do
-        python3 generate_wildcard_query.py -s 64 -prop dense -d "$dataset" -p 0.25 -n "$query_number"
+        python3 generate_wildcard_query.py -s 64 -prop dense -d "$dataset" -p 1.0 -n "$query_number"
       done
   done

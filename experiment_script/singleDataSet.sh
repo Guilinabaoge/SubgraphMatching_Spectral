@@ -36,6 +36,7 @@ byobu split-window -v
 #parameters: 1:datasetname, 2:wildcard percentage 3: 20/32
 #e.g ./singleDataSet.sh wordnet 0.25 20 RI 0/1
 #e.g ./singleDataSet.sh patents 0.75 32 GQL
+#e.g ./singleDataSet.sh whatever 0.5 64 GQL
 
 #echo "Dataset: dblp eu2005 hprd human patents wordnet yeast youtube"
 #read  dataset
