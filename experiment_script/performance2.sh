@@ -3,7 +3,7 @@
 prop=("dense")
 #datasets=("dblp" "eu2005" "hprd" "patents" "yeast" "youtube" "wordnet" "human")
 #datasets=("dblp" "eu2005" "hprd" "yeast" "wordnet" "human")
-datasets=("patents" "youtube")
+datasets=("youtube" "patents")
 for dataset in "${datasets[@]}"
 do
   for p in "${prop[@]}"
