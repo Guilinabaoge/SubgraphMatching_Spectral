@@ -34,9 +34,9 @@ byobu select-pane -t 7
 byobu split-window -v
 
 #parameters: 1:datasetname, 2:wildcard percentage 3: 20/32
-#e.g ./singleDataSet.sh wordnet 0.25 20 RI 0/1
-#e.g ./singleDataSet.sh patents 0.75 32 GQL
-#e.g ./singleDataSet.sh whatever 0.5 64 GQL
+
+#e.g ./singleDataSet2.sh 32 0.0 32 GQL
+#e.g ./singleDataSet2.sh 20 0.0 20 GQL
 
 #echo "Dataset: dblp eu2005 hprd human patents wordnet yeast youtube"
 #read  dataset
@@ -48,19 +48,20 @@ byobu split-window -v
 #read order
 
 
-filters=("LDF" "NLF" "GQL" "TSO" "CFL" "DPiso")
+#filters=("LDF" "NLF" "GQL" "TSO" "CFL" "DPiso")
+filters=("GQL" "TSO" "CFL" "DPiso")
 counter=0 
 for element in "${filters[@]}"
 do
 	byobu select-pane -t "$counter"
-	byobu send-keys "./performance2.sh 1 50 $1 $2 $element 0 $3 $4" Enter	
+	byobu send-keys "./performance2.sh 1 200 $1 $2 $element 0 $3 $4" Enter
 	((counter++))
 done
 
 for element in "${filters[@]}"
 do
 	byobu select-pane -t "$counter"
-	byobu send-keys "./performance2.sh 1 50 $1 $2 $element 1 $3 $4" Enter
+	byobu send-keys "./performance2.sh 1 200 $1 $2 $element 1 $3 $4" Enter
 	((counter++))
 done
 

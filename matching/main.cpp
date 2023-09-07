@@ -74,8 +74,8 @@ int main(int argc, char** argv) {
 //    Experiments::datagraphEigenMatrix = "../../eigenmatrices/"+dataset_name+".csv";
     Experiments::datagraphEigenMatrix = openData("../../eigenmatrices/"+dataset_name+".csv");
     string datagraph = "../../test/reallife_dataset/"+dataset_name+"/data_graph/"+dataset_name+".graph";
-//    string querygraph = "../../test/wildcard/wildcard_queries/"+dataset_name+"/"+wildcard_percentage+"/query_"+query_property+"_"+query_size+"_"+query_number+".graph";
-    string querygraph = "../../test/tests/wildcard_queries/"+dataset_name+"/"+wildcard_percentage+"/query_"+query_property+"_"+query_size+"_"+query_number+".graph";
+//    string querygraph = "../../test/tests/wildcard_queries/"+dataset_name+"/"+wildcard_percentage+"/query_"+query_property+"_"+query_size+"_"+query_number+".graph";
+    string querygraph = "../../test/reallife_dataset/"+dataset_name+"/query_graph/query_"+query_property+"_"+query_size+"_"+query_number+".graph";
     matching_algo_outputs result = Experiments::experiment3(datagraph,querygraph,filter,isEigencheck,NULL,order);
 
     std::ostringstream oss;

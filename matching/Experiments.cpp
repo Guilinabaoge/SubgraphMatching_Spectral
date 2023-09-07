@@ -23,7 +23,6 @@ Eigen::MatrixXd Experiments::datagraphEigenMatrix;
 matching_algo_outputs Experiments::experiment3(const string data_graph_path,const string query_graph_path
                                                ,const string filter,const string eigen,ui* order_pointer,const string order) {
 
-//    string filters[6] = {"LDF","NLF","GQL","TSO","CFL","DPiso"};
 
     matching_algo_inputs inputs;
     inputs.dgraph_path = data_graph_path;
@@ -34,18 +33,15 @@ matching_algo_outputs Experiments::experiment3(const string data_graph_path,cons
     inputs.eigen = eigen;
     inputs.order_pointer = order_pointer;
 
-
     matching_algo_outputs outputs = StudyPerformance::solveGraphQuery(inputs);
 
     if(stoi(eigen)){
         cout<<"Matches: "<<outputs.enumOutput.embedding_cnt<<filter<<"call_count "<<outputs.call_count <<" With eigen filter total time "<<outputs.total_time<<" enumeration time: "
         <<outputs.enumeration_time<<" preprocessing time: "<<outputs.preprocessing_time<<" candidate_sum: "<<outputs.candidate_count_sum<<" matching order: ";
-
         cout<<" "<<endl;
     } else{
         cout<<"Matches: "<<outputs.enumOutput.embedding_cnt<<filter<<"call_count "<<outputs.call_count<<" No eigen filter total time "<<outputs.total_time<<" enumeration time: "
         <<outputs.enumeration_time<<" preprocessing time: "<<outputs.preprocessing_time<<" candidate_sum: "<<outputs.candidate_count_sum<<" matching order: ";
-
         cout<<" "<<endl;
     }
 
